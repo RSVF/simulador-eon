@@ -1,0 +1,78 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package py.una.pol.simulador.eon;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.util.List;
+import org.jgrapht.Graph;
+import org.jgrapht.GraphPath;
+import org.jgrapht.alg.shortestpath.KShortestSimplePaths;
+import py.una.pol.simulador.eon.models.Demand;
+import py.una.pol.simulador.eon.models.Input;
+import py.una.pol.simulador.eon.models.Link;
+import py.una.pol.simulador.eon.models.enums.TopologiesEnum;
+import py.una.pol.simulador.eon.utils.GraphUtils;
+import py.una.pol.simulador.eon.utils.Utils;
+
+/**
+ *
+ * @author Néstor E. Reinoso Wood
+ */
+public class SimulatorTest {
+
+    private Input getTestingInput() {
+        Input input = new Input();
+        input.setSimulationTime(1000);
+        input.setTopology(TopologiesEnum.USNET);
+        input.setFsWidth(new BigDecimal("352"));
+        input.setCapacity(352);
+        input.setCores(7);
+        input.setLambda(100);
+        input.setErlang(1000);
+
+        return input;
+    }
+
+    public static void main(String[] args) {
+        try {
+            // Contador de demandas utilizado para identificación
+            Integer demandsQ = 1;
+
+            // Datos de entrada
+            Input input = new SimulatorTest().getTestingInput();
+
+            // Se genera la red de acuerdo a los datos de entrada
+            Graph<Integer, Link> graph = Utils.createTopology(input.getTopology(),
+                    input.getCores(), input.getFsWidth(), input.getCapacity());
+
+            // Iteración de unidades de tiempo
+            for (int i = 0; i < input.getSimulationTime(); i++) {
+
+                // Generación de demandas para la unidad de tiempo
+                List<Demand> demands = Utils.generateDemands(input.getLambda(),
+                        input.getSimulationTime(), input.getFsRangeMin(),
+                        input.getFsRangeMax(), graph.vertexSet().size(),
+                        input.getErlang() / input.getLambda(), demandsQ);
+
+                demandsQ += demands.size();
+
+                KShortestSimplePaths<Integer, Link> ksp = new KShortestSimplePaths<>(graph);
+
+                for (Demand demand : demands) {
+                    //k caminos más cortos entre source y destination de la demanda actual
+                    List<GraphPath<Integer, Link>> kspaths = ksp.getPaths(demand.getSource(), demand.getDestination(), 5);
+                    
+                    // TODO: Ejecutar RSA con crosstalk para insertar la demanda
+                    System.out.println(demand.getId());
+                    
+                }
+
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+}
