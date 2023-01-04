@@ -27,11 +27,13 @@ public class SimulatorTest {
         Input input = new Input();
         input.setSimulationTime(1000);
         input.setTopology(TopologiesEnum.USNET);
-        input.setFsWidth(new BigDecimal("352"));
-        input.setCapacity(352);
+        input.setFsWidth(new BigDecimal("12.5"));
+        input.setFsRangeMax(8);
+        input.setFsRangeMin(2);
+        input.setCapacity(350);
         input.setCores(7);
-        input.setLambda(100);
-        input.setErlang(1000);
+        input.setLambda(5);
+        input.setErlang(400);
 
         return input;
     }
@@ -64,6 +66,26 @@ public class SimulatorTest {
                 for (Demand demand : demands) {
                     //k caminos más cortos entre source y destination de la demanda actual
                     List<GraphPath<Integer, Link>> kspaths = ksp.getPaths(demand.getSource(), demand.getDestination(), 5);
+                    
+                    for(GraphPath<Integer, Link> kspath : kspaths) {
+                        // Primero Iterar enlances
+                        for(Link enlace : kspath.getEdgeList()) {
+                            // Iterar cores dentro de enlaces
+                            for(int core = 0; core < input.getCores(); core++) {
+                                //Iterar FSs dentro de cores
+                                for(int j = 0; j<input.getCapacity()-demand.getFs(); j++) {
+                                    Boolean hasSpace = Boolean.TRUE;
+                                    for(int k = j; k<j+demand.getFs(); k++) {
+                                        // Controlar FSs libres y con bajo Crosstalk
+                                        if(!enlace.getCores().get(core).getFrequencySlots().get(k).isFree()) {
+                                            // está ocupado
+                                            hasSpace = Boolean.FALSE;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                     
                     // TODO: Ejecutar RSA con crosstalk para insertar la demanda
                     System.out.println(demand.getId());
