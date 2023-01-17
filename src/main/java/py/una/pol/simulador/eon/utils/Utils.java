@@ -99,4 +99,24 @@ public class Utils {
         return demands;
     }
 
+    public static double crosstalkPerUnitLenght() {
+        double h;
+        h = (2 * Math.pow(0.06, 2) * 0.05) / (4000000 * 0.00003);
+        return h;
+    }
+
+    /**
+     * 
+     * @param n Número de cores vecinos
+     * @param h Crosstalk por Unidad de Longitud
+     * @param L Longitud del enlace
+     * @return Crosstalk
+     */
+    public static double XT(int n, double h, int L) {
+        double XT, e;
+        e = -(n + 1) * h * L;
+        XT = (n - (n * Math.exp(e))) / (1 + (n * Math.exp(e)));
+        return XT;
+    }
+
 }
