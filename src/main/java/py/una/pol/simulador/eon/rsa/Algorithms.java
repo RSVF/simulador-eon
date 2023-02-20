@@ -24,6 +24,30 @@ import py.una.pol.simulador.eon.models.Link;
  * @author Néstor E. Reinoso Wood
  */
 public class Algorithms {
+    
+    public static EstablishedRoute asd(Graph<Integer, Link> graph, 
+            List<GraphPath<Integer, Link>> kspaths, Demand demand,
+            Integer capacity, Integer cores) {
+        int k = 0;
+        
+        // Iteramos los KSPaths
+        while (k < kspaths.size() && kspaths.get(k) != null) {
+            GraphPath<Integer, Link> ksp = kspaths.get(k);
+            // Recorremos los slots de frecuencia
+            for (int i = 0; i < capacity; i++) {
+                for (Link link : ksp.getEdgeList()) {
+                    for (int core = 0; core < cores; core++) {
+                        FrequencySlot fs = link.getCores().get(core).getFrequencySlots().get(i);
+                        if (fs.isFree()) {
+                            
+                        }
+                    }
+                }
+            }
+        }
+        
+        return null;
+    }
 
     public static EstablishedRoute fa(Graph<Integer, Link> graph,
             List<GraphPath<Integer, Link>> kspaths, Demand demand,
@@ -31,13 +55,16 @@ public class Algorithms {
 
         // Representa la ocupación del espectro de todos los enlaces.
         Boolean so[][] = new Boolean[capacity][cores];
-        List<GraphPath> kspPlaced = new ArrayList<>();
+        List<GraphPath<Integer, Link>> kspPlaced = new ArrayList<>();
+        List<List<Integer>> kspPlacedCores = new ArrayList<>();
         Map<String, Integer> bestKspSlot;
         int k = 0;
 
         while (k < kspaths.size() && kspaths.get(k) != null) {
             // Se inicializa todo el espectro como libre
-            Arrays.fill(so, false);
+            for(int i = 0; i < capacity; i++) {
+                Arrays.fill(so[i], false);
+            }
             GraphPath<Integer, Link> ksp = kspaths.get(k);
 
             // Se setean los slots libres
@@ -53,6 +80,7 @@ public class Algorithms {
                 }
             }
             int count, j;
+            List<Integer> kspCores = new ArrayList<>();
             capacity:
             for (int i = 0; i < capacity; i++) {
                 count = 0;
@@ -65,7 +93,11 @@ public class Algorithms {
                             break;
                         }
                         if (count == demand.getFs()) {
+                            for(Link link : kspaths.get(k).getEdgeList()) {
+                                kspCores.add(getFreeCore(so[j]));
+                            }
                             kspPlaced.add(kspaths.get(k));
+                            kspPlacedCores.add(kspCores);
                             break capacity;
                         }
                     }
@@ -80,19 +112,19 @@ public class Algorithms {
             return null;
         }
         //Ksp ubidados ahora se debe elegir el mejor
-        bestKspSlot = countCuts(graph, kspPlaced, capacity, demand.getFs());
-        
-        //TODO: crear established route con los established links para cada enlace
-        EstablishedRoute establisedRoute = new EstablishedRoute((kspPlaced.get(bestKspSlot.get("ksp")).getEdgeList()), bestKspSlot.get("slot"), demand.getFs(), demand.getTimeLife(), demand.getSource(), demand.getDestination(), core);
+        bestKspSlot = countCuts(graph, kspPlaced, capacity, demand.getFs(), kspPlacedCores);
+        EstablishedRoute establisedRoute = new EstablishedRoute((kspPlaced.get(bestKspSlot.get("ksp")).getEdgeList()),
+                bestKspSlot.get("slot"), demand.getFs(), demand.getLifetime(), 
+                demand.getSource(), demand.getDestination(), kspPlacedCores.get(bestKspSlot.get("ksp")));
         return establisedRoute;
     }
 
-    public static Map countCuts(Graph graph, List<GraphPath> ksp, int capacity, int fs) {
+    public static Map countCuts(Graph<Integer, Link> graph, List<GraphPath<Integer, Link>> ksp, int capacity, int fs, List<List<Integer>> kspCores) {
         Map<String, Integer> slotCuts;
         ArrayList<Map<String, Integer>> bestKspSlot = new ArrayList<>();
 
         for (int k = 0; k < ksp.size(); k++) {
-            slotCuts = numCuts(ksp.get(k), graph, capacity, core, fs);
+            slotCuts = numCuts(ksp.get(k), graph, capacity, fs, kspCores.get(k));
             // Primera vez o si encuentra encuentra un resultado mejor (menos cuts)
             if (bestKspSlot.isEmpty() || slotCuts.get("cuts") < bestKspSlot.get(0).get("cuts")) {
                 // Limpiamos el array porque pueden haber más de un resultado guardado
@@ -110,7 +142,7 @@ public class Algorithms {
 //            return bestKspSlot.get(0);
 
         int finalPath;
-        finalPath = alignmentCalc(ksp, graph, bestKspSlot, core);
+        finalPath = alignmentCalc(ksp, graph, bestKspSlot, kspCores);
         return bestKspSlot.get(finalPath);
     }
 
@@ -123,7 +155,16 @@ public class Algorithms {
         return Boolean.TRUE;
     }
 
-    public static Map numCuts(GraphPath<Integer, Link> ksp, Graph<Integer, Link> graph, int capacity, int fs) {
+    private static Integer getFreeCore(Boolean[] so) {
+        for (int core = 0; core<so.length; core++) {
+            if (!so[core]) {
+                return core;
+            }
+        }
+        return -1;
+    }
+
+    public static Map numCuts(GraphPath<Integer, Link> ksp, Graph<Integer, Link> graph, int capacity, int fs, List<Integer> kspCores) {
         int cuts = -1;
         int slot = -1;
         Map<String, Integer> slotCuts = new HashMap<>();
@@ -134,13 +175,14 @@ public class Algorithms {
 
         for (int slotIndex : cIndexes) {
             if (slotIndex != 0) {
-                for (Link link : ksp.getEdgeList()) {
-                    for (Core core : link.getCores()) {
-                        // Si se encuentra un lugar vacio en el slot i - 1 del ksp actual
-                        if (core.getFrequencySlots().get(slotIndex - 1).isFree()) {
-                            cutAux++;
-                        }
+                for (int i = 0; i<ksp.getEdgeList().size(); i++) {
+                    Link link = ksp.getEdgeList().get(i);
+                    Core core = link.getCores().get(kspCores.get(i));
+                    // Si se encuentra un lugar vacio en el slot i - 1 del ksp actual
+                    if (core.getFrequencySlots().get(slotIndex - 1).isFree()) {
+                        cutAux++;
                     }
+                    
                 }
             }
 
@@ -196,16 +238,15 @@ public class Algorithms {
         return indexes;
     }
 
-
-    public static int alignmentCalc(List<GraphPath<Integer, Link>> ksp, 
-            Graph<Integer, Link> graph, ArrayList<Map<String, Integer>> kspSlot) {
+    public static int alignmentCalc(List<GraphPath<Integer, Link>> ksp,
+            Graph<Integer, Link> graph, ArrayList<Map<String, Integer>> kspSlot, List<List<Integer>> kspCores) {
         int lessMisalign = -1;
         int lessMisalignAux;
         int bestIndex = 0;
         int c = 0;
-        for (Map<String, Integer> k : kspSlot){
-            lessMisalignAux = countMisalignment(ksp.get(k.get("ksp")), graph, k.get("slot"));
-            if(lessMisalign == -1 || lessMisalignAux < lessMisalign){
+        for (Map<String, Integer> k : kspSlot) {
+            lessMisalignAux = countMisalignment(ksp.get(k.get("ksp")), graph, k.get("slot"), kspCores.get(c));
+            if (lessMisalign == -1 || lessMisalignAux < lessMisalign) {
                 lessMisalign = lessMisalignAux;
                 bestIndex = c;//Tengo que guardar el indice en kspSlot, no el indice en ksp
             }
@@ -214,25 +255,29 @@ public class Algorithms {
         return bestIndex;
     }
 
-    public static int countMisalignment(GraphPath<Integer, Link> ksp, Graph<Integer, Link> graph, int slot) {
+    public static int countMisalignment(GraphPath<Integer, Link> ksp, Graph<Integer, Link> graph, int slot, List<Integer> kspCores) {
         int missalign = 0;
         // Por cada enlace
-        for (Link link : ksp.getEdgeList() ){
+        for (int i = 0; i<ksp.getEdgeList().size(); i++) {
+            Link link = ksp.getEdgeList().get(i);
             // Vecinos por el nodo origen
-            for (Link fromNeighbour : graph.outgoingEdgesOf(link.getFrom())){
+            for (Link fromNeighbour : graph.outgoingEdgesOf(link.getFrom())) {
                 // Verificamos que el vecino no este en el camino
-                if(!ksp.getEdgeList().contains(fromNeighbour)){
+                if (!ksp.getEdgeList().contains(fromNeighbour)) {
                     //Si el slot elegido esta ocupado ocurre desalineación
-                    if(fromNeighbour.getCores().get(core).getFs().get(slot).isFree())
+                    if (fromNeighbour.getCores().get(kspCores.get(i)).getFrequencySlots().get(slot).isFree()) {
                         missalign++;
+                    }
                 }
             }
             // Vecinos por el nodo destino
-            for (Link toNeighbour : graph.outgoingEdgesOf(link.getTo())){
+            for (Link toNeighbour : graph.outgoingEdgesOf(link.getTo())) {
                 // Verificamos que el vecino no este en el camino
-                if(!ksp.getEdgeList().contains(toNeighbour)){
-                    if(toNeighbour.getCores().get(core).getFs().get(slot).isFree())//Si el slot elegido esta ocupado ocurre desalineación
+                if (!ksp.getEdgeList().contains(toNeighbour)) {
+                    if (toNeighbour.getCores().get(kspCores.get(i)).getFrequencySlots().get(slot).isFree())//Si el slot elegido esta ocupado ocurre desalineación
+                    {
                         missalign++;
+                    }
                 }
             }
         }

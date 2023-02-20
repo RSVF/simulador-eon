@@ -15,6 +15,7 @@ import org.jgrapht.Graph;
 import org.jgrapht.graph.SimpleWeightedGraph;
 import py.una.pol.simulador.eon.models.Core;
 import py.una.pol.simulador.eon.models.Demand;
+import py.una.pol.simulador.eon.models.EstablishedRoute;
 import py.una.pol.simulador.eon.models.Link;
 import py.una.pol.simulador.eon.models.enums.TopologiesEnum;
 
@@ -117,6 +118,15 @@ public class Utils {
         e = -(n + 1) * h * L;
         XT = (n - (n * Math.exp(e))) / (1 + (n * Math.exp(e)));
         return XT;
+    }
+
+    public static void assignFs(EstablishedRoute establishedRoute){
+        for (int j = 0; j<establishedRoute.getPath().size(); j++) {
+            for (int i = establishedRoute.getFsIndexBegin(); i < establishedRoute.getFsIndexBegin() + establishedRoute.getFsWidth(); i++){
+                establishedRoute.getPath().get(j).getCores().get(establishedRoute.getPathCores().get(j)).getFrequencySlots().get(i).setFree(false);
+                establishedRoute.getPath().get(j).getCores().get(establishedRoute.getPathCores().get(j)).getFrequencySlots().get(i).setLifetime(establishedRoute.getLifetime());
+            }
+        }
     }
 
 }

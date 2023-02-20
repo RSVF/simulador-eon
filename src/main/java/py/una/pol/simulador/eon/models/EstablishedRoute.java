@@ -13,7 +13,21 @@ public class EstablishedRoute {
     private Integer lifetime;
     private Integer from;
     private Integer to;
-    private List<EstablishedLink> path;
+    private List<Link> path;
+    private List<Integer> pathCores;
+
+    public EstablishedRoute() {
+    }
+
+    public EstablishedRoute(List<Link> path, Integer fsIndexBegin, Integer fsWidth, Integer lifetime, Integer from, Integer to, List<Integer> pathCores) {
+        this.path = path;
+        this.fsIndexBegin = fsIndexBegin;
+        this.fsWidth = fsWidth;
+        this.lifetime = lifetime;
+        this.from = from;
+        this.to = to;
+        this.pathCores = pathCores;
+    }
 
     @Override
     public String toString() {
