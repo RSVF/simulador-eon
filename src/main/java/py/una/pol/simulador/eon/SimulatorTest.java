@@ -79,7 +79,7 @@ public class SimulatorTest {
                     System.out.println("Insertando demanda " + demandaNumero++);
                     //k caminos más cortos entre source y destination de la demanda actual
                     List<GraphPath<Integer, Link>> kspaths = ksp.getPaths(demand.getSource(), demand.getDestination(), 5);
-
+                    
                     EstablishedRoute establishedRoute = Algorithms.fa(graph, kspaths, demand, input.getCapacity(), input.getCores());
 
                     if (establishedRoute == null) {

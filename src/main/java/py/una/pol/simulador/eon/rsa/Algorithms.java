@@ -24,12 +24,12 @@ import py.una.pol.simulador.eon.models.Link;
  * @author Néstor E. Reinoso Wood
  */
 public class Algorithms {
-    
-    public static EstablishedRoute asd(Graph<Integer, Link> graph, 
+
+    public static EstablishedRoute asd(Graph<Integer, Link> graph,
             List<GraphPath<Integer, Link>> kspaths, Demand demand,
             Integer capacity, Integer cores) {
         int k = 0;
-        
+
         // Iteramos los KSPaths
         while (k < kspaths.size() && kspaths.get(k) != null) {
             GraphPath<Integer, Link> ksp = kspaths.get(k);
@@ -39,13 +39,13 @@ public class Algorithms {
                     for (int core = 0; core < cores; core++) {
                         FrequencySlot fs = link.getCores().get(core).getFrequencySlots().get(i);
                         if (fs.isFree()) {
-                            
+
                         }
                     }
                 }
             }
         }
-        
+
         return null;
     }
 
@@ -62,7 +62,7 @@ public class Algorithms {
 
         while (k < kspaths.size() && kspaths.get(k) != null) {
             // Se inicializa todo el espectro como libre
-            for(int i = 0; i < capacity; i++) {
+            for (int i = 0; i < capacity; i++) {
                 Arrays.fill(so[i], false);
             }
             GraphPath<Integer, Link> ksp = kspaths.get(k);
@@ -93,7 +93,8 @@ public class Algorithms {
                             break;
                         }
                         if (count == demand.getFs()) {
-                            for(Link link : kspaths.get(k).getEdgeList()) {
+                            // TODO: Agregar control de cuando no hay core libre
+                            for (Link link : kspaths.get(k).getEdgeList()) {
                                 kspCores.add(getFreeCore(so[j]));
                             }
                             kspPlaced.add(kspaths.get(k));
@@ -114,7 +115,7 @@ public class Algorithms {
         //Ksp ubidados ahora se debe elegir el mejor
         bestKspSlot = countCuts(graph, kspPlaced, capacity, demand.getFs(), kspPlacedCores);
         EstablishedRoute establisedRoute = new EstablishedRoute((kspPlaced.get(bestKspSlot.get("ksp")).getEdgeList()),
-                bestKspSlot.get("slot"), demand.getFs(), demand.getLifetime(), 
+                bestKspSlot.get("slot"), demand.getFs(), demand.getLifetime(),
                 demand.getSource(), demand.getDestination(), kspPlacedCores.get(bestKspSlot.get("ksp")));
         return establisedRoute;
     }
@@ -156,7 +157,7 @@ public class Algorithms {
     }
 
     private static Integer getFreeCore(Boolean[] so) {
-        for (int core = 0; core<so.length; core++) {
+        for (int core = 0; core < so.length; core++) {
             if (!so[core]) {
                 return core;
             }
@@ -175,14 +176,14 @@ public class Algorithms {
 
         for (int slotIndex : cIndexes) {
             if (slotIndex != 0) {
-                for (int i = 0; i<ksp.getEdgeList().size(); i++) {
+                for (int i = 0; i < ksp.getEdgeList().size(); i++) {
                     Link link = ksp.getEdgeList().get(i);
                     Core core = link.getCores().get(kspCores.get(i));
                     // Si se encuentra un lugar vacio en el slot i - 1 del ksp actual
                     if (core.getFrequencySlots().get(slotIndex - 1).isFree()) {
                         cutAux++;
                     }
-                    
+
                 }
             }
 
@@ -195,6 +196,9 @@ public class Algorithms {
 
         slotCuts.put("cuts", cuts);
         slotCuts.put("slot", slot);
+        if(slot == -1) {
+            System.out.println("asd");
+        }
         return slotCuts;
 
     }
@@ -245,7 +249,7 @@ public class Algorithms {
         int bestIndex = 0;
         int c = 0;
         for (Map<String, Integer> k : kspSlot) {
-            lessMisalignAux = countMisalignment(ksp.get(k.get("ksp")), graph, k.get("slot"), kspCores.get(c));
+            lessMisalignAux = countMisalignment(ksp.get(k.get("ksp")), graph, k.get("slot"), kspCores.get(k.get("ksp")));
             if (lessMisalign == -1 || lessMisalignAux < lessMisalign) {
                 lessMisalign = lessMisalignAux;
                 bestIndex = c;//Tengo que guardar el indice en kspSlot, no el indice en ksp
@@ -258,15 +262,22 @@ public class Algorithms {
     public static int countMisalignment(GraphPath<Integer, Link> ksp, Graph<Integer, Link> graph, int slot, List<Integer> kspCores) {
         int missalign = 0;
         // Por cada enlace
-        for (int i = 0; i<ksp.getEdgeList().size(); i++) {
+        for (int i = 0; i < ksp.getEdgeList().size(); i++) {
             Link link = ksp.getEdgeList().get(i);
             // Vecinos por el nodo origen
             for (Link fromNeighbour : graph.outgoingEdgesOf(link.getFrom())) {
                 // Verificamos que el vecino no este en el camino
                 if (!ksp.getEdgeList().contains(fromNeighbour)) {
                     //Si el slot elegido esta ocupado ocurre desalineación
-                    if (fromNeighbour.getCores().get(kspCores.get(i)).getFrequencySlots().get(slot).isFree()) {
-                        missalign++;
+                    try {
+                        //System.out.println("i = " + i + "; slot = " + slot);
+                        //System.out.println("link: origen: " + link.getFrom() + " ; destino: " + link.getTo());
+                        //System.out.println("link-vecino: origen: " + fromNeighbour.getFrom() + " ; destino: " + fromNeighbour.getTo());
+                        if (fromNeighbour.getCores().get(kspCores.get(i)).getFrequencySlots().get(slot).isFree()) {
+                            missalign++;
+                        }
+                    } catch (IndexOutOfBoundsException ex) {
+                        System.out.println("asd");
                     }
                 }
             }
@@ -274,9 +285,13 @@ public class Algorithms {
             for (Link toNeighbour : graph.outgoingEdgesOf(link.getTo())) {
                 // Verificamos que el vecino no este en el camino
                 if (!ksp.getEdgeList().contains(toNeighbour)) {
-                    if (toNeighbour.getCores().get(kspCores.get(i)).getFrequencySlots().get(slot).isFree())//Si el slot elegido esta ocupado ocurre desalineación
-                    {
-                        missalign++;
+                    try {
+                        if (toNeighbour.getCores().get(kspCores.get(i)).getFrequencySlots().get(slot).isFree())//Si el slot elegido esta ocupado ocurre desalineación
+                        {
+                            missalign++;
+                        }
+                    } catch (IndexOutOfBoundsException ex) {
+                        System.out.println("asd");
                     }
                 }
             }

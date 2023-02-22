@@ -25,4 +25,26 @@ public class Link implements Serializable {
         return String.format("%s - %s\n%s", to, from, distance);
     }
 
+    @Override
+    public boolean equals(Object object) {
+        if (object == this) {
+            return true;
+        }
+
+        if (!(object instanceof Link)) {
+            return false;
+        }
+
+        Link c = (Link) object;
+        return this.hashCode() == c.hashCode();
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 67 * hash + this.from;
+        hash = 67 * hash + this.to;
+        return hash;
+    }
+
 }
