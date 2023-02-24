@@ -172,7 +172,7 @@ public class Algorithms {
 
         ArrayList<Integer> cIndexes;
         int cutAux = 0;
-        cIndexes = searchIndexes(ksp, graph, capacity, fs);
+        cIndexes = searchIndexes(ksp, graph, capacity, fs, kspCores);
 
         for (int slotIndex : cIndexes) {
             if (slotIndex != 0) {
@@ -204,7 +204,7 @@ public class Algorithms {
     }
 
     public static ArrayList<Integer> searchIndexes(GraphPath<Integer, Link> ksp,
-            Graph<Integer, Link> graph, Integer capacity, Integer fsQ) {
+            Graph<Integer, Link> graph, Integer capacity, Integer fsQ, List<Integer> kspCores) {
 
         // Inicialmente el primer slot puede ser candidato
         boolean canBeCandidate = true;
@@ -214,8 +214,9 @@ public class Algorithms {
 
         for (int i = 0; i < capacity; i++) {
             free = true;
-            for (Link link : ksp.getEdgeList()) {
-                for (Core core : link.getCores()) {
+            for (int j = 0; j<ksp.getEdgeList().size();j++) {
+                    Link link = ksp.getEdgeList().get(j);
+                    Core core = link.getCores().get(kspCores.get(j));
                     FrequencySlot fs = core.getFrequencySlots().get(i);
                     // Se verifica que todo el camino este libre en el slot i
                     if (!fs.isFree()) {
@@ -225,7 +226,7 @@ public class Algorithms {
                         slots = 0;
                         break;
                     }
-                }
+                
             }
             // Si esta libre se aumenta el contador
             if (free) {
@@ -238,6 +239,9 @@ public class Algorithms {
                 slots = 0;
                 canBeCandidate = false;
             }
+        }
+        if(indexes.isEmpty()) {
+            System.out.println("testSearchIndexes");
         }
         return indexes;
     }
@@ -277,7 +281,7 @@ public class Algorithms {
                             missalign++;
                         }
                     } catch (IndexOutOfBoundsException ex) {
-                        System.out.println("asd");
+                        System.out.println("qwe");
                     }
                 }
             }
@@ -291,7 +295,7 @@ public class Algorithms {
                             missalign++;
                         }
                     } catch (IndexOutOfBoundsException ex) {
-                        System.out.println("asd");
+                        System.out.println("qwe");
                     }
                 }
             }
