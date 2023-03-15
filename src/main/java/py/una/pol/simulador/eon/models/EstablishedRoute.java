@@ -28,6 +28,9 @@ public class EstablishedRoute {
         this.to = to;
         this.pathCores = pathCores;
     }
+        public void subLifeTime(){
+        this.lifetime--;
+    }
 
     @Override
     public String toString() {

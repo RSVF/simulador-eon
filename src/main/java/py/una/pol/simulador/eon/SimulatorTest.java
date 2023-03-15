@@ -62,7 +62,7 @@ public class SimulatorTest {
             List<List<GraphPath<Integer, Link>>> kspList = new ArrayList<>();
 
             int demandaNumero = 1;
-
+            int bloqueos=0;
             // Iteración de unidades de tiempo
             for (int i = 0; i < input.getSimulationTime(); i++) {
 
@@ -79,13 +79,14 @@ public class SimulatorTest {
                     System.out.println("Insertando demanda " + demandaNumero++);
                     //k caminos más cortos entre source y destination de la demanda actual
                     List<GraphPath<Integer, Link>> kspaths = ksp.getPaths(demand.getSource(), demand.getDestination(), 5);
-                    
+
                     EstablishedRoute establishedRoute = Algorithms.fa(graph, kspaths, demand, input.getCapacity(), input.getCores());
 
-                    if (establishedRoute == null) {
+                    if (establishedRoute == null || establishedRoute.getFsIndexBegin() == -1) {
                         //Bloqueo
                         System.out.println("BLOQUEO");
                         demand.setBlocked(true);
+                        bloqueos++;
                     } else {
                         //Ruta establecida
                         establishedRoutes.add(establishedRoute);
@@ -93,8 +94,22 @@ public class SimulatorTest {
                         Utils.assignFs(establishedRoute);
                     }
                 }
+                for (EstablishedRoute route : establishedRoutes) {
+                    route.subLifeTime();
+                }
 
+                for (int ri = 0; ri < establishedRoutes.size(); ri++) {
+                    EstablishedRoute route = establishedRoutes.get(ri);
+                    if (route.getLifetime() == 0) {
+                        Utils.deallocateFs(graph, route);
+                        establishedRoutes.remove(ri);
+                        kspList.remove(ri);
+                        ri--;
+                    }
+                }
+              
             }
+            System.out.println("TOTAL DE BLOQUEOS: " + bloqueos);
         } catch (IOException ex) {
             ex.printStackTrace();
         }

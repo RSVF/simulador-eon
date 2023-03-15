@@ -95,7 +95,9 @@ public class Algorithms {
                         if (count == demand.getFs()) {
                             // TODO: Agregar control de cuando no hay core libre
                             for (Link link : kspaths.get(k).getEdgeList()) {
-                                kspCores.add(getFreeCore(so[j]));
+                                if(getFreeCore(so[j])>-1){
+                                    kspCores.add(getFreeCore(so[j]));
+                                }
                             }
                             kspPlaced.add(kspaths.get(k));
                             kspPlacedCores.add(kspCores);
@@ -173,7 +175,7 @@ public class Algorithms {
         ArrayList<Integer> cIndexes;
         int cutAux = 0;
         cIndexes = searchIndexes(ksp, graph, capacity, fs, kspCores);
-
+        //System.out.println("cIndexes: " + cIndexes.size());    
         for (int slotIndex : cIndexes) {
             if (slotIndex != 0) {
                 for (int i = 0; i < ksp.getEdgeList().size(); i++) {
@@ -197,7 +199,7 @@ public class Algorithms {
         slotCuts.put("cuts", cuts);
         slotCuts.put("slot", slot);
         if(slot == -1) {
-            System.out.println("asd");
+            //System.out.println("asdfg");
         }
         return slotCuts;
 
@@ -214,6 +216,8 @@ public class Algorithms {
 
         for (int i = 0; i < capacity; i++) {
             free = true;
+           // System.out.println("Tamaño KSP: " + ksp.getEdgeList().size());
+            //System.out.println("Tamaño KSPCores: " + kspCores.size());
             for (int j = 0; j<ksp.getEdgeList().size();j++) {
                     Link link = ksp.getEdgeList().get(j);
                     Core core = link.getCores().get(kspCores.get(j));
@@ -241,7 +245,7 @@ public class Algorithms {
             }
         }
         if(indexes.isEmpty()) {
-            System.out.println("testSearchIndexes");
+            //System.out.println("testSearchIndexes");
         }
         return indexes;
     }
@@ -281,7 +285,7 @@ public class Algorithms {
                             missalign++;
                         }
                     } catch (IndexOutOfBoundsException ex) {
-                        System.out.println("qwe");
+                       // System.out.println("qwe");
                     }
                 }
             }
@@ -295,7 +299,7 @@ public class Algorithms {
                             missalign++;
                         }
                     } catch (IndexOutOfBoundsException ex) {
-                        System.out.println("qwe");
+                        //System.out.println("qwe");
                     }
                 }
             }

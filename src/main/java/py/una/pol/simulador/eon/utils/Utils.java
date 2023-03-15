@@ -107,7 +107,7 @@ public class Utils {
     }
 
     /**
-     * 
+     *
      * @param n Número de cores vecinos
      * @param h Crosstalk por Unidad de Longitud
      * @param L Longitud del enlace
@@ -120,11 +120,20 @@ public class Utils {
         return XT;
     }
 
-    public static void assignFs(EstablishedRoute establishedRoute){
-        for (int j = 0; j<establishedRoute.getPath().size(); j++) {
-            for (int i = establishedRoute.getFsIndexBegin(); i < establishedRoute.getFsIndexBegin() + establishedRoute.getFsWidth(); i++){
+    public static void assignFs(EstablishedRoute establishedRoute) {
+        for (int j = 0; j < establishedRoute.getPath().size(); j++) {
+            for (int i = establishedRoute.getFsIndexBegin(); i < establishedRoute.getFsIndexBegin() + establishedRoute.getFsWidth(); i++) {
                 establishedRoute.getPath().get(j).getCores().get(establishedRoute.getPathCores().get(j)).getFrequencySlots().get(i).setFree(false);
                 establishedRoute.getPath().get(j).getCores().get(establishedRoute.getPathCores().get(j)).getFrequencySlots().get(i).setLifetime(establishedRoute.getLifetime());
+            }
+        }
+    }
+
+    public static void deallocateFs(Graph graph, EstablishedRoute establishedRoute) {
+        for (int j = 0; j < establishedRoute.getPath().size(); j++) {
+            for (int i = establishedRoute.getFsIndexBegin(); i < establishedRoute.getFsIndexBegin() + establishedRoute.getFsWidth(); i++) {
+                establishedRoute.getPath().get(j).getCores().get(establishedRoute.getPathCores().get(j)).getFrequencySlots().get(i).setFree(true);
+                establishedRoute.getPath().get(j).getCores().get(establishedRoute.getPathCores().get(j)).getFrequencySlots().get(i).setLifetime(0);
             }
         }
     }
