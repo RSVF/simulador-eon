@@ -199,6 +199,7 @@ public class Algorithms {
         slotCuts.put("cuts", cuts);
         slotCuts.put("slot", slot);
         if(slot == -1) {
+            //System.out.println("asd");
             //System.out.println("asdfg");
         }
         return slotCuts;
@@ -285,6 +286,7 @@ public class Algorithms {
                             missalign++;
                         }
                     } catch (IndexOutOfBoundsException ex) {
+                        //System.out.println("qwe");
                        // System.out.println("qwe");
                     }
                 }

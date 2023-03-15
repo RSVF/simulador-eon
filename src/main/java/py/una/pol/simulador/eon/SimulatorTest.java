@@ -82,6 +82,7 @@ public class SimulatorTest {
 
                     EstablishedRoute establishedRoute = Algorithms.fa(graph, kspaths, demand, input.getCapacity(), input.getCores());
 
+                    if (establishedRoute == null || establishedRoute.getFsIndexBegin()== -1) {
                     if (establishedRoute == null || establishedRoute.getFsIndexBegin() == -1) {
                         //Bloqueo
                         System.out.println("BLOQUEO");
