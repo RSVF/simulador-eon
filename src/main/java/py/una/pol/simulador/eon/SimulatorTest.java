@@ -39,6 +39,7 @@ public class SimulatorTest {
         input.setCores(7);
         input.setLambda(5);
         input.setErlang(400);
+        input.setMaxCrosstalk(new BigDecimal("10"));
 
         return input;
     }
@@ -80,7 +81,7 @@ public class SimulatorTest {
                     //k caminos más cortos entre source y destination de la demanda actual
                     List<GraphPath<Integer, Link>> kspaths = ksp.getPaths(demand.getSource(), demand.getDestination(), 5);
 
-                    EstablishedRoute establishedRoute = Algorithms.fa(graph, kspaths, demand, input.getCapacity(), input.getCores());
+                    EstablishedRoute establishedRoute = Algorithms.fa(graph, kspaths, demand, input.getCapacity(), input.getCores(), input.getMaxCrosstalk());
 
                     if (establishedRoute == null || establishedRoute.getFsIndexBegin()== -1) {
                     if (establishedRoute == null || establishedRoute.getFsIndexBegin() == -1) {
@@ -111,6 +112,7 @@ public class SimulatorTest {
               
             }
             System.out.println("TOTAL DE BLOQUEOS: " + bloqueos);
+            }
         } catch (IOException ex) {
             ex.printStackTrace();
         }

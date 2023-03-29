@@ -25,5 +25,6 @@ public class Input {
     private Integer fsRangeMin;
     private Integer fsRangeMax;
     private Integer cores;
+    private BigDecimal maxCrosstalk;
 
 }

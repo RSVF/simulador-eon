@@ -51,7 +51,7 @@ public class Algorithms {
 
     public static EstablishedRoute fa(Graph<Integer, Link> graph,
             List<GraphPath<Integer, Link>> kspaths, Demand demand,
-            Integer capacity, Integer cores) {
+            Integer capacity, Integer cores, BigDecimal maxCrosstalk) {
 
         // Representa la ocupación del espectro de todos los enlaces.
         Boolean so[][] = new Boolean[capacity][cores];
@@ -72,8 +72,8 @@ public class Algorithms {
                 for (Link link : ksp.getEdgeList()) {
                     for (int core = 0; core < cores; core++) {
                         FrequencySlot fs = link.getCores().get(core).getFrequencySlots().get(i);
-                        if (!fs.isFree()) {
-                            //TODO: agregar control de crosstalk acá
+                        // Si el slot ya está ocupado, o el crosstalk supera el límite máximo, se marca como ocupado
+                        if (!fs.isFree() || fs.getCrosstalk().compareTo(maxCrosstalk) >= 0) {
                             so[i][core] = true;
                         }
                     }
@@ -122,7 +122,7 @@ public class Algorithms {
         return establisedRoute;
     }
 
-    public static Map countCuts(Graph<Integer, Link> graph, List<GraphPath<Integer, Link>> ksp, int capacity, int fs, List<List<Integer>> kspCores) {
+    public static Map<String, Integer> countCuts(Graph<Integer, Link> graph, List<GraphPath<Integer, Link>> ksp, int capacity, int fs, List<List<Integer>> kspCores) {
         Map<String, Integer> slotCuts;
         ArrayList<Map<String, Integer>> bestKspSlot = new ArrayList<>();
 
@@ -167,7 +167,7 @@ public class Algorithms {
         return -1;
     }
 
-    public static Map numCuts(GraphPath<Integer, Link> ksp, Graph<Integer, Link> graph, int capacity, int fs, List<Integer> kspCores) {
+    public static Map<String, Integer> numCuts(GraphPath<Integer, Link> ksp, Graph<Integer, Link> graph, int capacity, int fs, List<Integer> kspCores) {
         int cuts = -1;
         int slot = -1;
         Map<String, Integer> slotCuts = new HashMap<>();
