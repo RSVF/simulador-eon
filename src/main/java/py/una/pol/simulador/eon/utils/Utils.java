@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import org.apfloat.*;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.SimpleWeightedGraph;
 import py.una.pol.simulador.eon.models.Core;
@@ -113,11 +114,11 @@ public class Utils {
      * @param L Longitud del enlace
      * @return Crosstalk
      */
-    public static BigDecimal XT(int n, double h, int L) {
+    public static double XT(int n, double h, int L) {
         double XT, e;
         e = -(n + 1) * h * L;
         XT = (n - (n * Math.exp(e))) / (1 + (n * Math.exp(e)));
-        return new BigDecimal(XT);
+        return XT;
     }
     
     public static int getCantidadVecinos() {
@@ -126,9 +127,12 @@ public class Utils {
      
     // Para pasar a DB: XTdb = 10 * log10(XT);
     
+    public static BigDecimal toDB(double value) {
+        return new BigDecimal(10D*Math.log(value));
+    }
     
 
-    public static void assignFs(EstablishedRoute establishedRoute) {
+    public static EstablishedRoute assignFs(EstablishedRoute establishedRoute) {
         for (int j = 0; j < establishedRoute.getPath().size(); j++) {
             for (int i = establishedRoute.getFsIndexBegin(); i < establishedRoute.getFsIndexBegin() + establishedRoute.getFsWidth(); i++) {
                 establishedRoute.getPath().get(j).getCores().get(establishedRoute.getPathCores().get(j)).getFrequencySlots().get(i).setFree(false);
@@ -137,12 +141,15 @@ public class Utils {
                 // TODO: Asignar crosstalk
                 for(Integer coreIndex = 0; coreIndex<establishedRoute.getPath().get(j).getCores().size(); coreIndex++) {
                     if(!core.equals(coreIndex)) {
-                        BigDecimal crosstalk = XT(getCantidadVecinos(), crosstalkPerUnitLenght(), establishedRoute.getPath().get(j).getDistance());
-                        establishedRoute.getPath().get(j).getCores().get(coreIndex).getFrequencySlots().get(i).setCrosstalk(establishedRoute.getPath().get(j).getCores().get(coreIndex).getFrequencySlots().get(i).getCrosstalk().add(crosstalk));
+                        double crosstalk = XT(getCantidadVecinos(), crosstalkPerUnitLenght(), establishedRoute.getPath().get(j).getDistance());
+                        BigDecimal crosstalkDB = toDB(crosstalk);
+                        establishedRoute.getPath().get(j).getCores().get(coreIndex).getFrequencySlots().get(i).setCrosstalk(establishedRoute.getPath().get(j).getCores().get(coreIndex).getFrequencySlots().get(i).getCrosstalk().add(crosstalkDB));
+                        System.out.println(establishedRoute.getPath().get(j).getCores().get(coreIndex).getFrequencySlots().get(i).getCrosstalk().toPlainString());
                     }
                 } 
             }
         }
+        return establishedRoute;
     }
 
     public static void deallocateFs(Graph graph, EstablishedRoute establishedRoute) {
@@ -154,8 +161,9 @@ public class Utils {
                 // TODO: Desasignar crosttalk
                 for(Integer coreIndex = 0; coreIndex<establishedRoute.getPath().get(j).getCores().size(); coreIndex++) {
                     if(!core.equals(coreIndex)) {
-                        BigDecimal crosstalk = XT(getCantidadVecinos(), crosstalkPerUnitLenght(), establishedRoute.getPath().get(j).getDistance());
-                        establishedRoute.getPath().get(j).getCores().get(coreIndex).getFrequencySlots().get(i).setCrosstalk(establishedRoute.getPath().get(j).getCores().get(coreIndex).getFrequencySlots().get(i).getCrosstalk().subtract(crosstalk));
+                        double crosstalk = XT(getCantidadVecinos(), crosstalkPerUnitLenght(), establishedRoute.getPath().get(j).getDistance());
+                        BigDecimal crosstalkDB = toDB(crosstalk);
+                        establishedRoute.getPath().get(j).getCores().get(coreIndex).getFrequencySlots().get(i).setCrosstalk(establishedRoute.getPath().get(j).getCores().get(coreIndex).getFrequencySlots().get(i).getCrosstalk().subtract(crosstalkDB));
                     }
                 } 
             }

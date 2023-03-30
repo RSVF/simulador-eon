@@ -39,7 +39,7 @@ public class SimulatorTest {
         input.setCores(7);
         input.setLambda(5);
         input.setErlang(400);
-        input.setMaxCrosstalk(new BigDecimal("10"));
+        input.setMaxCrosstalk(new BigDecimal("-25"));
 
         return input;
     }
@@ -83,7 +83,6 @@ public class SimulatorTest {
 
                     EstablishedRoute establishedRoute = Algorithms.fa(graph, kspaths, demand, input.getCapacity(), input.getCores(), input.getMaxCrosstalk());
 
-                    if (establishedRoute == null || establishedRoute.getFsIndexBegin()== -1) {
                     if (establishedRoute == null || establishedRoute.getFsIndexBegin() == -1) {
                         //Bloqueo
                         System.out.println("BLOQUEO");
@@ -91,11 +90,11 @@ public class SimulatorTest {
                         bloqueos++;
                     } else {
                         //Ruta establecida
+                        establishedRoute = Utils.assignFs(establishedRoute);
                         establishedRoutes.add(establishedRoute);
                         kspList.add(kspaths);
-                        Utils.assignFs(establishedRoute);
                     }
-                }
+                
                 for (EstablishedRoute route : establishedRoutes) {
                     route.subLifeTime();
                 }

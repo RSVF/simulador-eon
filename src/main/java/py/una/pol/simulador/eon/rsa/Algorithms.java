@@ -73,7 +73,7 @@ public class Algorithms {
                     for (int core = 0; core < cores; core++) {
                         FrequencySlot fs = link.getCores().get(core).getFrequencySlots().get(i);
                         // Si el slot ya está ocupado, o el crosstalk supera el límite máximo, se marca como ocupado
-                        if (!fs.isFree() || fs.getCrosstalk().compareTo(maxCrosstalk) >= 0) {
+                        if (!fs.isFree() || fs.getCrosstalk().compareTo(maxCrosstalk) < 0) {
                             so[i][core] = true;
                         }
                     }
