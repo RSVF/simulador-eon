@@ -49,6 +49,13 @@
             <version>2.14.1</version>
             <type>jar</type>
         </dependency>
+        
+        <dependency>
+            <groupId>org.apfloat</groupId>
+            <artifactId>apfloat</artifactId>
+            <version>1.10.1</version>
+        </dependency>
+
     </dependencies>
     
     <build>
