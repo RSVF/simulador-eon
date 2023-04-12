@@ -104,7 +104,7 @@ public class Utils {
 
     public static double crosstalkPerUnitLenght() {
         double h;
-        h = (2 * Math.pow(0.06, 2) * 0.05) / (4000000 * 0.00003);
+        h = (2 * Math.pow(0.000035, 2) * 0.05) / (4000000 * 0.00003);
         return h;
     }
 
@@ -122,7 +122,10 @@ public class Utils {
         return XT;
     }
     
-    public static int getCantidadVecinos() {
+    public static int getCantidadVecinos(int core) {
+        if(core == 6) {
+            return 6;
+        }
         return 3;
     }
      
@@ -142,7 +145,7 @@ public class Utils {
                 // TODO: Asignar crosstalk
                 for(Integer coreIndex = 0; coreIndex<establishedRoute.getPath().get(j).getCores().size(); coreIndex++) {
                     if(!core.equals(coreIndex)) {
-                        double crosstalk = XT(getCantidadVecinos(), crosstalkPerUnitLenght(), establishedRoute.getPath().get(j).getDistance());
+                        double crosstalk = XT(getCantidadVecinos(coreIndex), crosstalkPerUnitLenght(), establishedRoute.getPath().get(j).getDistance());
                         BigDecimal crosstalkDB = toDB(crosstalk);
                         establishedRoute.getPath().get(j).getCores().get(coreIndex).getFrequencySlots().get(i).setCrosstalk(establishedRoute.getPath().get(j).getCores().get(coreIndex).getFrequencySlots().get(i).getCrosstalk().add(crosstalkDB));
                         
@@ -167,7 +170,7 @@ public class Utils {
                 // TODO: Desasignar crosttalk
                 for(Integer coreIndex = 0; coreIndex<establishedRoute.getPath().get(j).getCores().size(); coreIndex++) {
                     if(!core.equals(coreIndex)) {
-                        double crosstalk = XT(getCantidadVecinos(), crosstalkPerUnitLenght(), establishedRoute.getPath().get(j).getDistance());
+                        double crosstalk = XT(getCantidadVecinos(coreIndex), crosstalkPerUnitLenght(), establishedRoute.getPath().get(j).getDistance());
                         BigDecimal crosstalkDB = toDB(crosstalk);
                         establishedRoute.getPath().get(j).getCores().get(coreIndex).getFrequencySlots().get(i).setCrosstalk(establishedRoute.getPath().get(j).getCores().get(coreIndex).getFrequencySlots().get(i).getCrosstalk().subtract(crosstalkDB));
                         

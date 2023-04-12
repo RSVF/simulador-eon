@@ -96,7 +96,6 @@ public class Algorithms {
                             break;
                         }
                         if (count == demand.getFs()) {
-                            // TODO: Agregar control de cuando no hay core libre
                             for (Link link : kspaths.get(k).getEdgeList()) {
                                 if(getFreeCore(so[j])>-1){
                                     kspCores.add(getFreeCore(so[j]));
