@@ -36,7 +36,7 @@ public class SimulatorTest {
         input.setFsWidth(new BigDecimal("12.5"));
         input.setFsRangeMax(8);
         input.setFsRangeMin(2);
-        input.setCapacity(350);
+        input.setCapacity(320);
         input.setCores(7);
         input.setLambda(5);
         input.setErlang(400);
