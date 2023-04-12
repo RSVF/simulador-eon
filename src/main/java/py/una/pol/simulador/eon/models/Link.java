@@ -24,6 +24,18 @@ public class Link implements Serializable {
                 + "}";*/
         return String.format("%s - %s\n%s", to, from, distance);
     }
+    public String toString(int core, int fsIndexBegin, int fsWidth) {
+        String asd = "Link {"
+                + "distance=" + distance
+                + ", core=" + core
+                + ", from=" + from
+                + ", to=" + to
+                + "}";
+        for(FrequencySlot fs : cores.get(core).getFrequencySlots()) {
+            asd = asd + fs.toString();
+        }
+        return asd;
+    }
 
     @Override
     public boolean equals(Object object) {

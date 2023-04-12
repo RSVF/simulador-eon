@@ -12,6 +12,7 @@ import java.util.List;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.KShortestSimplePaths;
+import py.una.pol.simulador.eon.models.AssignFsResponse;
 import py.una.pol.simulador.eon.models.Demand;
 import py.una.pol.simulador.eon.models.EstablishedRoute;
 import py.una.pol.simulador.eon.models.FrequencySlot;
@@ -63,7 +64,7 @@ public class SimulatorTest {
             List<List<GraphPath<Integer, Link>>> kspList = new ArrayList<>();
 
             int demandaNumero = 1;
-            int bloqueos=0;
+            int bloqueos = 0;
             // Iteración de unidades de tiempo
             for (int i = 0; i < input.getSimulationTime(); i++) {
 
@@ -90,27 +91,29 @@ public class SimulatorTest {
                         bloqueos++;
                     } else {
                         //Ruta establecida
-                        establishedRoute = Utils.assignFs(establishedRoute);
+                        AssignFsResponse response = Utils.assignFs(graph, establishedRoute);
+                        establishedRoute = response.getRoute();
+                        graph = response.getGraph();
                         establishedRoutes.add(establishedRoute);
                         kspList.add(kspaths);
                     }
-                
+
+                }
+
                 for (EstablishedRoute route : establishedRoutes) {
                     route.subLifeTime();
                 }
 
                 for (int ri = 0; ri < establishedRoutes.size(); ri++) {
                     EstablishedRoute route = establishedRoutes.get(ri);
-                    if (route.getLifetime() == 0) {
+                    if (route.getLifetime().equals(0)) {
                         Utils.deallocateFs(graph, route);
                         establishedRoutes.remove(ri);
                         kspList.remove(ri);
                         ri--;
                     }
                 }
-              
-            }
-            System.out.println("TOTAL DE BLOQUEOS: " + bloqueos);
+                System.out.println("TOTAL DE BLOQUEOS: " + bloqueos);
             }
         } catch (IOException ex) {
             ex.printStackTrace();

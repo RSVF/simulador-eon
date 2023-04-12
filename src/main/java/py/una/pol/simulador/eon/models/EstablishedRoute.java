@@ -34,7 +34,7 @@ public class EstablishedRoute {
 
     @Override
     public String toString() {
-        return "EstablisedRoute{"
+        String asd = "EstablisedRoute{"
                 + "path=" + path
                 + ", fsIndexBegin=" + fsIndexBegin
                 + ", fsWidth=" + fsWidth
@@ -42,6 +42,10 @@ public class EstablishedRoute {
                 + ", from=" + from
                 + ", to=" + to
                 + "}";
+        for (Link link : path) {
+            asd = asd + link.toString();
+        }
+        return asd;
     }
 
 }

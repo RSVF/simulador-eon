@@ -14,6 +14,7 @@ import java.util.Random;
 import org.apfloat.*;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.SimpleWeightedGraph;
+import py.una.pol.simulador.eon.models.AssignFsResponse;
 import py.una.pol.simulador.eon.models.Core;
 import py.una.pol.simulador.eon.models.Demand;
 import py.una.pol.simulador.eon.models.EstablishedRoute;
@@ -132,7 +133,7 @@ public class Utils {
     }
     
 
-    public static EstablishedRoute assignFs(EstablishedRoute establishedRoute) {
+    public static AssignFsResponse assignFs(Graph<Integer, Link> graph, EstablishedRoute establishedRoute) {
         for (int j = 0; j < establishedRoute.getPath().size(); j++) {
             for (int i = establishedRoute.getFsIndexBegin(); i < establishedRoute.getFsIndexBegin() + establishedRoute.getFsWidth(); i++) {
                 establishedRoute.getPath().get(j).getCores().get(establishedRoute.getPathCores().get(j)).getFrequencySlots().get(i).setFree(false);
@@ -144,15 +145,20 @@ public class Utils {
                         double crosstalk = XT(getCantidadVecinos(), crosstalkPerUnitLenght(), establishedRoute.getPath().get(j).getDistance());
                         BigDecimal crosstalkDB = toDB(crosstalk);
                         establishedRoute.getPath().get(j).getCores().get(coreIndex).getFrequencySlots().get(i).setCrosstalk(establishedRoute.getPath().get(j).getCores().get(coreIndex).getFrequencySlots().get(i).getCrosstalk().add(crosstalkDB));
-                        System.out.println(establishedRoute.getPath().get(j).getCores().get(coreIndex).getFrequencySlots().get(i).getCrosstalk().toPlainString());
+                        
+                        graph.getEdge(establishedRoute.getPath().get(j).getTo(), establishedRoute.getPath().get(j).getFrom()).getCores().get(coreIndex).getFrequencySlots().get(i).setFree(false);
+                        BigDecimal existingCrosstalk = graph.getEdge(establishedRoute.getPath().get(j).getTo(), establishedRoute.getPath().get(j).getFrom()).getCores().get(coreIndex).getFrequencySlots().get(i).getCrosstalk();
+                        graph.getEdge(establishedRoute.getPath().get(j).getTo(), establishedRoute.getPath().get(j).getFrom()).getCores().get(coreIndex).getFrequencySlots().get(i).setCrosstalk(existingCrosstalk.add(crosstalkDB));
+                        //System.out.println("CT despues de suma" + graph.getEdge(establishedRoute.getPath().get(j).getTo(), establishedRoute.getPath().get(j).getFrom()).getCores().get(coreIndex).getFrequencySlots().get(i).getCrosstalk());
                     }
                 } 
             }
         }
-        return establishedRoute;
+        AssignFsResponse response = new AssignFsResponse(graph, establishedRoute);
+        return response;
     }
 
-    public static void deallocateFs(Graph graph, EstablishedRoute establishedRoute) {
+    public static void deallocateFs(Graph<Integer, Link> graph, EstablishedRoute establishedRoute) {
         for (int j = 0; j < establishedRoute.getPath().size(); j++) {
             for (int i = establishedRoute.getFsIndexBegin(); i < establishedRoute.getFsIndexBegin() + establishedRoute.getFsWidth(); i++) {
                 Integer core = establishedRoute.getPathCores().get(j);
@@ -164,6 +170,11 @@ public class Utils {
                         double crosstalk = XT(getCantidadVecinos(), crosstalkPerUnitLenght(), establishedRoute.getPath().get(j).getDistance());
                         BigDecimal crosstalkDB = toDB(crosstalk);
                         establishedRoute.getPath().get(j).getCores().get(coreIndex).getFrequencySlots().get(i).setCrosstalk(establishedRoute.getPath().get(j).getCores().get(coreIndex).getFrequencySlots().get(i).getCrosstalk().subtract(crosstalkDB));
+                        
+                        graph.getEdge(establishedRoute.getPath().get(j).getTo(), establishedRoute.getPath().get(j).getFrom()).getCores().get(coreIndex).getFrequencySlots().get(i).setFree(true);
+                        BigDecimal existingCrosstalk = graph.getEdge(establishedRoute.getPath().get(j).getTo(), establishedRoute.getPath().get(j).getFrom()).getCores().get(coreIndex).getFrequencySlots().get(i).getCrosstalk();
+                        graph.getEdge(establishedRoute.getPath().get(j).getTo(), establishedRoute.getPath().get(j).getFrom()).getCores().get(coreIndex).getFrequencySlots().get(i).setCrosstalk(existingCrosstalk.subtract(crosstalkDB));
+                        //System.out.println("CT despues de suma" + graph.getEdge(establishedRoute.getPath().get(j).getTo(), establishedRoute.getPath().get(j).getFrom()).getCores().get(coreIndex).getFrequencySlots().get(i).getCrosstalk());
                     }
                 } 
             }
