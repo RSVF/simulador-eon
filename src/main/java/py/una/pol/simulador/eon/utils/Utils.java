@@ -104,7 +104,9 @@ public class Utils {
 
     public static double crosstalkPerUnitLenght() {
         double h;
-        h = (2 * Math.pow(0.000035, 2) * 0.05) / (4000000 * 0.00003);
+        //h = (2 * Math.pow(0.000035, 2) * 0.05) / (4000000 * 0.00003);
+        //h = (2 * Math.pow(0.000035, 2) * 0.055) / (4000000 * 0.000045);
+        h = (2 * Math.pow(0.06, 2) * 0.05) / (4000000 * 0.00003);
         return h;
     }
 
@@ -132,7 +134,7 @@ public class Utils {
     // Para pasar a DB: XTdb = 10 * log10(XT);
     
     public static BigDecimal toDB(double value) {
-        return new BigDecimal(10D*Math.log(value));
+        return new BigDecimal(10D*Math.log10(value));
     }
     
 
