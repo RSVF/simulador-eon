@@ -105,8 +105,11 @@ public class Utils {
     public static double crosstalkPerUnitLenght() {
         double h;
         //h = (2 * Math.pow(0.000035, 2) * 0.05) / (4000000 * 0.00003);
-        //h = (2 * Math.pow(0.000035, 2) * 0.055) / (4000000 * 0.000045);
-        h = (2 * Math.pow(0.06, 2) * 0.05) / (4000000 * 0.00003);
+        h = (2 * Math.pow(0.000035, 2) * 0.055) / (4000000 * 0.000045);
+        //h = (2 * Math.pow(0.06, 2) * 0.05) / (4000000 * 0.00003);
+        System.out.println("H - " + h);
+        
+                
         return h;
     }
 
@@ -154,7 +157,7 @@ public class Utils {
                         graph.getEdge(establishedRoute.getPath().get(j).getTo(), establishedRoute.getPath().get(j).getFrom()).getCores().get(coreIndex).getFrequencySlots().get(i).setFree(false);
                         BigDecimal existingCrosstalk = graph.getEdge(establishedRoute.getPath().get(j).getTo(), establishedRoute.getPath().get(j).getFrom()).getCores().get(coreIndex).getFrequencySlots().get(i).getCrosstalk();
                         graph.getEdge(establishedRoute.getPath().get(j).getTo(), establishedRoute.getPath().get(j).getFrom()).getCores().get(coreIndex).getFrequencySlots().get(i).setCrosstalk(existingCrosstalk.add(crosstalkDB));
-                        //System.out.println("CT despues de suma" + graph.getEdge(establishedRoute.getPath().get(j).getTo(), establishedRoute.getPath().get(j).getFrom()).getCores().get(coreIndex).getFrequencySlots().get(i).getCrosstalk());
+                        System.out.println("CT despues de suma" + graph.getEdge(establishedRoute.getPath().get(j).getTo(), establishedRoute.getPath().get(j).getFrom()).getCores().get(coreIndex).getFrequencySlots().get(i).getCrosstalk());
                     }
                 } 
             }

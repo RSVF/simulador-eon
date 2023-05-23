@@ -79,7 +79,7 @@ public class Algorithms {
                         if (!fs.isFree()) {
                             so[i][core] = true;
                         }
-                        if (crosstalkEnEnlace.compareTo(maxCrosstalk) < 0) {
+                        if (crosstalkEnEnlace.compareTo(maxCrosstalk) > 0) {
                             so[i][core] = true;
                         }
                         /*for (int coreVecino = 0; coreVecino<cores; coreVecino++) {
