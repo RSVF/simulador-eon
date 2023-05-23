@@ -82,16 +82,17 @@ public class Algorithms {
                         if (crosstalkEnEnlace.compareTo(maxCrosstalk) > 0) {
                             so[i][core] = true;
                         }
-                        /*for (int coreVecino = 0; coreVecino<cores; coreVecino++) {
+                        
+                        for (int coreVecino = 0; coreVecino<cores; coreVecino++) {
                             if(coreVecino != core) {
                                 FrequencySlot fsVecino = link.getCores().get(coreVecino).getFrequencySlots().get(i);
                                 BigDecimal crosstalkASumar = Utils.toDB(Utils.XT(Utils.getCantidadVecinos(core), Utils.crosstalkPerUnitLenght(), link.getDistance()));
                                 BigDecimal crosstalk = fsVecino.getCrosstalk().add(crosstalkASumar);
-                                if(crosstalk.compareTo(maxCrosstalk) < 0) {
+                                if(crosstalk.compareTo(maxCrosstalk) > 0) {
                                     so[i][core] = true;
                                 }
                             }
-                        }*/
+                        }
                     }
                 }
             }

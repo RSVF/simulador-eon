@@ -40,7 +40,7 @@ public class SimulatorTest {
         input.setCores(7);
         input.setLambda(5);
         input.setErlang(400);
-        input.setMaxCrosstalk(new BigDecimal("-25"));
+        input.setMaxCrosstalk(new BigDecimal("0.0031622776601683793"));
 
         return input;
     }
