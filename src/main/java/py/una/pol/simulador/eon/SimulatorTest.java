@@ -67,7 +67,7 @@ public class SimulatorTest {
             int bloqueos = 0;
             // Iteración de unidades de tiempo
             for (int i = 0; i < input.getSimulationTime(); i++) {
-
+                System.out.println("Tiempo: " + (i+1));
                 // Generación de demandas para la unidad de tiempo
                 List<Demand> demands = Utils.generateDemands(input.getLambda(),
                         input.getSimulationTime(), input.getFsRangeMin(),
@@ -78,7 +78,7 @@ public class SimulatorTest {
 
                 KShortestSimplePaths<Integer, Link> ksp = new KShortestSimplePaths<>(graph);
                 for (Demand demand : demands) {
-                    System.out.println("Insertando demanda " + demandaNumero++);
+                    //System.out.println("Insertando demanda " + demandaNumero++);
                     //k caminos más cortos entre source y destination de la demanda actual
                     List<GraphPath<Integer, Link>> kspaths = ksp.getPaths(demand.getSource(), demand.getDestination(), 5);
 
