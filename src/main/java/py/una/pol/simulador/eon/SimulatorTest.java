@@ -73,6 +73,7 @@ public class SimulatorTest {
                         input.getSimulationTime(), input.getFsRangeMin(),
                         input.getFsRangeMax(), graph.vertexSet().size(),
                         input.getErlang() / input.getLambda(), demandsQ);
+                System.out.println("Demandas a insertar: " + demands.size());
 
                 demandsQ += demands.size();
 
@@ -83,6 +84,8 @@ public class SimulatorTest {
                     List<GraphPath<Integer, Link>> kspaths = ksp.getPaths(demand.getSource(), demand.getDestination(), 5);
 
                     EstablishedRoute establishedRoute = Algorithms.fa(graph, kspaths, demand, input.getCapacity(), input.getCores(), input.getMaxCrosstalk());
+
+                    //EstablishedRoute establishedRoute = Algorithms.genericRouting(graph, kspaths, demand, input.getCapacity(), input.getCores(), input.getMaxCrosstalk());
 
                     if (establishedRoute == null || establishedRoute.getFsIndexBegin() == -1) {
                         //Bloqueo

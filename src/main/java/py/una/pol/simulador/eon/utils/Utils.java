@@ -137,8 +137,12 @@ public class Utils {
     // Para pasar a DB: XTdb = 10 * log10(XT);
     
     public static BigDecimal toDB(double value) {
-        //return new BigDecimal(10D*Math.log10(value));
-        return new BigDecimal(value);
+        try {
+            return new BigDecimal(10D*Math.log10(value));
+        } catch(Exception ex) {
+            return BigDecimal.ZERO;
+        }
+        //return new BigDecimal(value);
     }
     
 
