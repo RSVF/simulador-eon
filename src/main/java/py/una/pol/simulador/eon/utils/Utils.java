@@ -167,7 +167,6 @@ public class Utils {
                         BigDecimal crosstalkDB = toDB(crosstalk);
                         establishedRoute.getPath().get(j).getCores().get(coreIndex).getFrequencySlots().get(i).setCrosstalk(establishedRoute.getPath().get(j).getCores().get(coreIndex).getFrequencySlots().get(i).getCrosstalk().add(crosstalkDB));
                         
-                        graph.getEdge(establishedRoute.getPath().get(j).getTo(), establishedRoute.getPath().get(j).getFrom()).getCores().get(coreIndex).getFrequencySlots().get(i).setFree(false);
                         BigDecimal existingCrosstalk = graph.getEdge(establishedRoute.getPath().get(j).getTo(), establishedRoute.getPath().get(j).getFrom()).getCores().get(coreIndex).getFrequencySlots().get(i).getCrosstalk();
                         graph.getEdge(establishedRoute.getPath().get(j).getTo(), establishedRoute.getPath().get(j).getFrom()).getCores().get(coreIndex).getFrequencySlots().get(i).setCrosstalk(existingCrosstalk.add(crosstalkDB));
                         //System.out.println("CT despues de suma" + graph.getEdge(establishedRoute.getPath().get(j).getTo(), establishedRoute.getPath().get(j).getFrom()).getCores().get(coreIndex).getFrequencySlots().get(i).getCrosstalk());
@@ -193,7 +192,6 @@ public class Utils {
                         BigDecimal crosstalkDB = toDB(crosstalk);
                         establishedRoute.getPath().get(j).getCores().get(coreIndex).getFrequencySlots().get(i).setCrosstalk(establishedRoute.getPath().get(j).getCores().get(coreIndex).getFrequencySlots().get(i).getCrosstalk().subtract(crosstalkDB));
                         
-                        graph.getEdge(establishedRoute.getPath().get(j).getTo(), establishedRoute.getPath().get(j).getFrom()).getCores().get(coreIndex).getFrequencySlots().get(i).setFree(true);
                         BigDecimal existingCrosstalk = graph.getEdge(establishedRoute.getPath().get(j).getTo(), establishedRoute.getPath().get(j).getFrom()).getCores().get(coreIndex).getFrequencySlots().get(i).getCrosstalk();
                         graph.getEdge(establishedRoute.getPath().get(j).getTo(), establishedRoute.getPath().get(j).getFrom()).getCores().get(coreIndex).getFrequencySlots().get(i).setCrosstalk(existingCrosstalk.subtract(crosstalkDB));
                         //System.out.println("CT despues de suma" + graph.getEdge(establishedRoute.getPath().get(j).getTo(), establishedRoute.getPath().get(j).getFrom()).getCores().get(coreIndex).getFrequencySlots().get(i).getCrosstalk());

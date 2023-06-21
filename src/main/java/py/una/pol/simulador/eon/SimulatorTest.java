@@ -38,9 +38,9 @@ public class SimulatorTest {
         input.setFsRangeMin(2);
         input.setCapacity(320);
         input.setCores(7);
-        input.setLambda(5);
-        input.setErlang(400);
-        input.setMaxCrosstalk(new BigDecimal("0.0031622776601683793"));
+        input.setLambda(150);
+        input.setErlang(2500);
+        input.setMaxCrosstalk(new BigDecimal("0.0000031622776601683793"));
 
         return input;
     }
@@ -84,7 +84,7 @@ public class SimulatorTest {
                     //k caminos más cortos entre source y destination de la demanda actual
                     List<GraphPath<Integer, Link>> kspaths = ksp.getPaths(demand.getSource(), demand.getDestination(), 5);
 
-                    EstablishedRoute establishedRoute = Algorithms.ruteoCoreUnico(graph, kspaths, demand, input.getCapacity(), input.getCores(), input.getMaxCrosstalk());
+                    EstablishedRoute establishedRoute = Algorithms.fa(graph, kspaths, demand, input.getCapacity(), input.getCores(), input.getMaxCrosstalk());
 
                     //EstablishedRoute establishedRoute = Algorithms.genericRouting(graph, kspaths, demand, input.getCapacity(), input.getCores(), input.getMaxCrosstalk());
 
