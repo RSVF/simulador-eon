@@ -44,11 +44,14 @@ public class Algorithms {
                     List<Link> enlacesLibres = new ArrayList<>();
                     List<Integer> kspCores = new ArrayList<>();
                     List<BigDecimal> crosstalkFSList = new ArrayList<>();
+                    // Se inicializa la lista de valores de crosstalk para cada slot de frecuencia del bloque
                     for (int fsCrosstalkIndex = 0; fsCrosstalkIndex < demand.getFs(); fsCrosstalkIndex++) {
                         crosstalkFSList.add(BigDecimal.ZERO);
                     }
+                    // Se recorre la ruta
                     for (Link link : ksp.getEdgeList()) {
                         if (core < cores) {
+                            // Se obtiene los slots de frecuencia a verificar
                             List<FrequencySlot> bloqueFS = link.getCores().get(core).getFrequencySlots().subList(i, i + demand.getFs());
 
                             // Controla si está ocupado por una demanda
@@ -56,8 +59,10 @@ public class Algorithms {
 
                                 // Control de crosstalk
                                 for (int fsCrosstalkIndex = 0; fsCrosstalkIndex < demand.getFs(); fsCrosstalkIndex++) {
+                                    // Control de crosstalk en la ruta elegida
                                     BigDecimal crosstalkRuta = crosstalkFSList.get(0);
                                     if (isCrosstalkFree(bloqueFS.get(fsCrosstalkIndex), maxCrosstalk, crosstalkRuta)) {
+                                        // Control de crosstalk en los cores vecinos
                                         if (isNextToCrosstalkFreeCores(link, maxCrosstalk, core, i, demand.getFs())) {
                                             enlacesLibres.add(link);
                                             kspCores.add(core);
