@@ -79,11 +79,12 @@ public class SimulatorTest {
 
                 KShortestSimplePaths<Integer, Link> ksp = new KShortestSimplePaths<>(graph);
                 for (Demand demand : demands) {
+                    demandaNumero++;
                     //System.out.println("Insertando demanda " + demandaNumero++);
                     //k caminos más cortos entre source y destination de la demanda actual
                     List<GraphPath<Integer, Link>> kspaths = ksp.getPaths(demand.getSource(), demand.getDestination(), 5);
 
-                    EstablishedRoute establishedRoute = Algorithms.fa(graph, kspaths, demand, input.getCapacity(), input.getCores(), input.getMaxCrosstalk());
+                    EstablishedRoute establishedRoute = Algorithms.ruteoCoreUnico(graph, kspaths, demand, input.getCapacity(), input.getCores(), input.getMaxCrosstalk());
 
                     //EstablishedRoute establishedRoute = Algorithms.genericRouting(graph, kspaths, demand, input.getCapacity(), input.getCores(), input.getMaxCrosstalk());
 
@@ -118,6 +119,7 @@ public class SimulatorTest {
                 }
                 System.out.println("TOTAL DE BLOQUEOS: " + bloqueos);
             }
+            System.out.println("Cantidad de demandas: " + demandaNumero);
         } catch (IOException ex) {
             ex.printStackTrace();
         }

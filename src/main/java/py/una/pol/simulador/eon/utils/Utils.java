@@ -121,11 +121,18 @@ public class Utils {
      * @return Crosstalk
      */
     public static double XT(int n, double h, int L) {
+        double XT = 0;
+        for (int i = 0; i < n; i++) {
+            XT = h * (L*1000);
+        }
+        return XT;
+    }
+    /*public static double XT(int n, double h, int L) {
         double XT, e;
         e = -(n + 1) * h * L;
         XT = (n - (n * Math.exp(e))) / (1 + (n * Math.exp(e)));
         return XT;
-    }
+    }*/
     
     public static int getCantidadVecinos(int core) {
         if(core == 6) {
@@ -138,11 +145,11 @@ public class Utils {
     
     public static BigDecimal toDB(double value) {
         try {
-            return new BigDecimal(10D*Math.log10(value));
+            //return new BigDecimal(10D*Math.log10(value));
         } catch(Exception ex) {
             return BigDecimal.ZERO;
         }
-        //return new BigDecimal(value);
+        return new BigDecimal(value);
     }
     
 
@@ -152,9 +159,10 @@ public class Utils {
                 establishedRoute.getPath().get(j).getCores().get(establishedRoute.getPathCores().get(j)).getFrequencySlots().get(i).setFree(false);
                 Integer core = establishedRoute.getPathCores().get(j);
                 establishedRoute.getPath().get(j).getCores().get(core).getFrequencySlots().get(i).setLifetime(establishedRoute.getLifetime());
+                List<Integer> coreVecinos = getCoreVecinos(core);
                 // TODO: Asignar crosstalk
                 for(Integer coreIndex = 0; coreIndex<establishedRoute.getPath().get(j).getCores().size(); coreIndex++) {
-                    if(!core.equals(coreIndex)) {
+                    if(!core.equals(coreIndex) && coreVecinos.contains(coreIndex)) {
                         double crosstalk = XT(getCantidadVecinos(coreIndex), crosstalkPerUnitLenght(), establishedRoute.getPath().get(j).getDistance());
                         BigDecimal crosstalkDB = toDB(crosstalk);
                         establishedRoute.getPath().get(j).getCores().get(coreIndex).getFrequencySlots().get(i).setCrosstalk(establishedRoute.getPath().get(j).getCores().get(coreIndex).getFrequencySlots().get(i).getCrosstalk().add(crosstalkDB));
@@ -177,9 +185,10 @@ public class Utils {
                 Integer core = establishedRoute.getPathCores().get(j);
                 establishedRoute.getPath().get(j).getCores().get(core).getFrequencySlots().get(i).setFree(true);
                 establishedRoute.getPath().get(j).getCores().get(core).getFrequencySlots().get(i).setLifetime(0);
+                List<Integer> coreVecinos = getCoreVecinos(core);
                 // TODO: Desasignar crosttalk
                 for(Integer coreIndex = 0; coreIndex<establishedRoute.getPath().get(j).getCores().size(); coreIndex++) {
-                    if(!core.equals(coreIndex)) {
+                    if(!core.equals(coreIndex) && coreVecinos.contains(coreIndex)) {
                         double crosstalk = XT(getCantidadVecinos(coreIndex), crosstalkPerUnitLenght(), establishedRoute.getPath().get(j).getDistance());
                         BigDecimal crosstalkDB = toDB(crosstalk);
                         establishedRoute.getPath().get(j).getCores().get(coreIndex).getFrequencySlots().get(i).setCrosstalk(establishedRoute.getPath().get(j).getCores().get(coreIndex).getFrequencySlots().get(i).getCrosstalk().subtract(crosstalkDB));
@@ -192,6 +201,51 @@ public class Utils {
                 } 
             }
         }
+    }
+    
+    public static List<Integer> getCoreVecinos(Integer coreActual) {
+        List<Integer> vecinos = new ArrayList<>();
+        switch (coreActual) {
+            case 0 ->  {
+                vecinos.add(1);
+                vecinos.add(5);
+                vecinos.add(6);
+            }
+            case 1 ->  {
+                vecinos.add(0);
+                vecinos.add(2);
+                vecinos.add(6);
+            }
+            case 2 ->  {
+                vecinos.add(1);
+                vecinos.add(3);
+                vecinos.add(6);
+            }
+            case 3 ->  {
+                vecinos.add(2);
+                vecinos.add(4);
+                vecinos.add(6);
+            }
+            case 4 ->  {
+                vecinos.add(3);
+                vecinos.add(5);
+                vecinos.add(6);
+            }
+            case 5 ->  {
+                vecinos.add(0);
+                vecinos.add(4);
+                vecinos.add(6);
+            }
+            case 6 ->  {
+                vecinos.add(0);
+                vecinos.add(1);
+                vecinos.add(2);
+                vecinos.add(3);
+                vecinos.add(4);
+                vecinos.add(5);
+            }
+        }
+        return vecinos;
     }
 
 }
