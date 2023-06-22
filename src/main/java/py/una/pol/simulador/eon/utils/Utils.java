@@ -123,7 +123,7 @@ public class Utils {
     public static double XT(int n, double h, int L) {
         double XT = 0;
         for (int i = 0; i < n; i++) {
-            XT = h * (L*1000);
+            XT = XT + (h * (L*1000));
         }
         return XT;
     }

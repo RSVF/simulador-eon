@@ -17,6 +17,7 @@ import py.una.pol.simulador.eon.models.enums.TopologiesEnum;
 public class Input {
     
     private Integer simulationTime;
+    private Integer demands;
     private TopologiesEnum topology;
     private BigDecimal fsWidth;
     private Integer capacity;

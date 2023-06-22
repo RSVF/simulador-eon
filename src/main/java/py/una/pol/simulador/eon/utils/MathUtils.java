@@ -61,5 +61,9 @@ public class MathUtils {
         }
         return resultado;
     }
-
+    
+    public static Integer getSimulationTime(Integer demands, Integer lambda) {
+        Integer simulationTime;
+        return simulationTime=demands/lambda;
+    }
 }

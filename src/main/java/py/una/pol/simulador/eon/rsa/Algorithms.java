@@ -96,7 +96,7 @@ public class Algorithms {
                     fsIndexBegin, demand.getFs(), demand.getLifetime(),
                     demand.getSource(), demand.getDestination(), kspPlacedCores.get(0));
         } else {
-            System.out.println("Bloqueo");
+            //System.out.println("Bloqueo");
             establisedRoute = null;
         }
         return establisedRoute;
@@ -168,7 +168,7 @@ public class Algorithms {
                     fsIndexBegin, demand.getFs(), demand.getLifetime(),
                     demand.getSource(), demand.getDestination(), kspPlacedCores.get(0));
         } else {
-            System.out.println("Bloqueo");
+            //System.out.println("Bloqueo");
             establisedRoute = null;
         }
         return establisedRoute;

@@ -21,6 +21,7 @@ import py.una.pol.simulador.eon.models.Link;
 import py.una.pol.simulador.eon.models.enums.TopologiesEnum;
 import py.una.pol.simulador.eon.rsa.Algorithms;
 import py.una.pol.simulador.eon.utils.GraphUtils;
+import py.una.pol.simulador.eon.utils.MathUtils;
 import py.una.pol.simulador.eon.utils.Utils;
 
 /**
@@ -31,17 +32,20 @@ public class SimulatorTest {
 
     private Input getTestingInput() {
         Input input = new Input();
-        input.setSimulationTime(1000);
+        
+        input.setDemands(100000);
         input.setTopology(TopologiesEnum.NSFNET);
         input.setFsWidth(new BigDecimal("12.5"));
         input.setFsRangeMax(8);
         input.setFsRangeMin(2);
         input.setCapacity(320);
         input.setCores(7);
-        input.setLambda(150);
-        input.setErlang(2500);
-        input.setMaxCrosstalk(new BigDecimal("0.0000031622776601683793"));
-
+        input.setLambda(5);
+        input.setErlang(200);
+        input.setSimulationTime(MathUtils.getSimulationTime(input.getDemands(),input.getLambda()));
+        //input.setMaxCrosstalk(new BigDecimal("0.003162277660168379331998893544")); // XT = -25 dB
+        input.setMaxCrosstalk(new BigDecimal("0.031622776601683793319988935444")); // XT = -15 dB
+        
         return input;
     }
 
@@ -84,13 +88,13 @@ public class SimulatorTest {
                     //k caminos más cortos entre source y destination de la demanda actual
                     List<GraphPath<Integer, Link>> kspaths = ksp.getPaths(demand.getSource(), demand.getDestination(), 5);
 
-                    EstablishedRoute establishedRoute = Algorithms.fa(graph, kspaths, demand, input.getCapacity(), input.getCores(), input.getMaxCrosstalk());
-
+                    EstablishedRoute establishedRoute = Algorithms.ruteoCoreUnico(graph, kspaths, demand, input.getCapacity(), input.getCores(), input.getMaxCrosstalk());
+                    //EstablishedRoute establishedRoute = Algorithms.ruteoCoreMultiple(graph, kspaths, demand, input.getCapacity(), input.getCores(), input.getMaxCrosstalk());
                     //EstablishedRoute establishedRoute = Algorithms.genericRouting(graph, kspaths, demand, input.getCapacity(), input.getCores(), input.getMaxCrosstalk());
 
                     if (establishedRoute == null || establishedRoute.getFsIndexBegin() == -1) {
                         //Bloqueo
-                        System.out.println("BLOQUEO");
+                        //System.out.println("BLOQUEO");
                         demand.setBlocked(true);
                         bloqueos++;
                     } else {
