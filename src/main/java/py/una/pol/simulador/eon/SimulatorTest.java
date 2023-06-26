@@ -41,11 +41,10 @@ public class SimulatorTest {
         input.setCapacity(320);
         input.setCores(7);
         input.setLambda(5);
-        input.setErlang(200);
+        input.setErlang(7500);
         input.setSimulationTime(MathUtils.getSimulationTime(input.getDemands(),input.getLambda()));
-        //input.setMaxCrosstalk(new BigDecimal("0.003162277660168379331998893544")); // XT = -25 dB
-        input.setMaxCrosstalk(new BigDecimal("0.031622776601683793319988935444")); // XT = -15 dB
-        
+        input.setMaxCrosstalk(new BigDecimal("0.003162277660168379331998893544")); // XT = -25 dB
+        //input.setMaxCrosstalk(new BigDecimal("0.031622776601683793319988935444")); // XT = -15 dB
         return input;
     }
 
@@ -99,6 +98,7 @@ public class SimulatorTest {
                         bloqueos++;
                     } else {
                         //Ruta establecida
+                       // System.out.println("Cores: " + establishedRoute.getPathCores());
                         AssignFsResponse response = Utils.assignFs(graph, establishedRoute);
                         establishedRoute = response.getRoute();
                         graph = response.getGraph();

@@ -60,7 +60,7 @@ public class Algorithms {
                                 // Control de crosstalk
                                 for (int fsCrosstalkIndex = 0; fsCrosstalkIndex < demand.getFs(); fsCrosstalkIndex++) {
                                     // Control de crosstalk en la ruta elegida
-                                    BigDecimal crosstalkRuta = crosstalkFSList.get(0);
+                                    BigDecimal crosstalkRuta = crosstalkFSList.get(fsCrosstalkIndex);
                                     if (isCrosstalkFree(bloqueFS.get(fsCrosstalkIndex), maxCrosstalk, crosstalkRuta)) {
                                         // Control de crosstalk en los cores vecinos
                                         if (isNextToCrosstalkFreeCores(link, maxCrosstalk, core, i, demand.getFs())) {
@@ -127,13 +127,11 @@ public class Algorithms {
                     for (int core = 0; core < cores; core++) {
                         if (i < capacity - demand.getFs()) {
                             List<FrequencySlot> bloqueFS = link.getCores().get(core).getFrequencySlots().subList(i, i + demand.getFs());
-
                             // Controla si está ocupado por una demanda
                             if (isFSBlockFree(bloqueFS)) {
-
                                 // Control de crosstalk
                                 for (int fsCrosstalkIndex = 0; fsCrosstalkIndex < demand.getFs(); fsCrosstalkIndex++) {
-                                    BigDecimal crosstalkRuta = crosstalkFSList.get(0);
+                                    BigDecimal crosstalkRuta = crosstalkFSList.get(fsCrosstalkIndex);
                                     if (isCrosstalkFree(bloqueFS.get(fsCrosstalkIndex), maxCrosstalk, crosstalkRuta)) {
                                         if (isNextToCrosstalkFreeCores(link, maxCrosstalk, core, i, demand.getFs())) {
                                             enlacesLibres.add(link);
