@@ -52,15 +52,13 @@ public class SimulatorTest {
 
     public static void main(String[] args) {
         try {
-
-            // Lista de rutas establecidas durante la simulación
-            List<EstablishedRoute> establishedRoutes = new ArrayList<>();
-
-            // Contador de demandas utilizado para identificación
-            Integer demandsQ = 1;
-
             // Datos de entrada
             for(int erlang = 7000; erlang<=10000; erlang=erlang+100) {
+                // Lista de rutas establecidas durante la simulación
+                List<EstablishedRoute> establishedRoutes = new ArrayList<>();
+
+                // Contador de demandas utilizado para identificación
+                Integer demandsQ = 1;
                 
                 Input input = new SimulatorTest().getTestingInput(erlang);
                 
