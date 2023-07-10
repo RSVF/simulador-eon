@@ -5,6 +5,7 @@
 package py.una.pol.simulador.eon.models;
 
 import java.math.BigDecimal;
+import java.util.List;
 import lombok.Data;
 import py.una.pol.simulador.eon.models.enums.RSAEnum;
 import py.una.pol.simulador.eon.models.enums.TopologiesEnum;
@@ -19,8 +20,8 @@ public class Input {
     
     private Integer simulationTime;
     private Integer demands;
-    private TopologiesEnum topology;
-    private RSAEnum algorithm;
+    private List<TopologiesEnum> topologies;
+    private List<RSAEnum> algorithms;
     private BigDecimal fsWidth;
     private Integer capacity;
     private Integer erlang;
