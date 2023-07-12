@@ -56,6 +56,10 @@ public class SimulatorTest {
         input.setSimulationTime(MathUtils.getSimulationTime(input.getDemands(), input.getLambda()));
         input.setMaxCrosstalk(new BigDecimal("0.003162277660168379331998893544")); // XT = -25 dB
         //input.setMaxCrosstalk(new BigDecimal("0.031622776601683793319988935444")); // XT = -15 dB
+        input.setCrosstalkPerUnitLenghtList(new ArrayList<>());
+        input.getCrosstalkPerUnitLenghtList().add((2 * Math.pow(0.000035, 2) * 0.05) / (4000000 * 0.00003));
+        input.getCrosstalkPerUnitLenghtList().add((2 * Math.pow(0.000035, 2) * 0.055) / (4000000 * 0.000045));
+        input.getCrosstalkPerUnitLenghtList().add((2 * Math.pow(0.06, 2) * 0.05) / (4000000 * 0.00003));
         return input;
     }
 
@@ -63,7 +67,7 @@ public class SimulatorTest {
         try {
             createTable();
             // Datos de entrada
-            for (int erlang = 7000; erlang <= 10000; erlang = erlang + 500) {
+            for (int erlang = 7000; erlang <= 11000; erlang = erlang + 500) {
 
                 Input input = new SimulatorTest().getTestingInput(erlang);
                 for (TopologiesEnum topology : input.getTopologies()) {
@@ -85,78 +89,80 @@ public class SimulatorTest {
                         listaDemandas.add(demands);
                     }
 
-                    for (RSAEnum algorithm : input.getAlgorithms()) {
-                        // Lista de rutas establecidas durante la simulación
-                        List<EstablishedRoute> establishedRoutes = new ArrayList<>();
+                    for(Double crosstalkPerUnitLength : input.getCrosstalkPerUnitLenghtList()) {
+                        for (RSAEnum algorithm : input.getAlgorithms()) {
+                            // Lista de rutas establecidas durante la simulación
+                            List<EstablishedRoute> establishedRoutes = new ArrayList<>();
 
-                        System.out.println("Inicializando simulación del RSA " + algorithm.label() + " para erlang: " + (erlang) + " para la topología " + topology.label());
+                            System.out.println("Inicializando simulación del RSA " + algorithm.label() + " para erlang: " + (erlang) + " para la topología " + topology.label() + " y H = " + crosstalkPerUnitLength.toString());
 
-                        List<List<GraphPath<Integer, Link>>> kspList = new ArrayList<>();
+                            List<List<GraphPath<Integer, Link>>> kspList = new ArrayList<>();
 
-                        int demandaNumero = 1;
-                        int bloqueos = 0;
-                        // Iteración de unidades de tiempo
-                        for (int i = 0; i < input.getSimulationTime(); i++) {
-                            System.out.println("Tiempo: " + (i + 1));
-                            // Generación de demandas para la unidad de tiempo
-                            List<Demand> demands = listaDemandas.get(i);
-                            //System.out.println("Demandas a insertar: " + demands.size());
+                            int demandaNumero = 1;
+                            int bloqueos = 0;
+                            // Iteración de unidades de tiempo
+                            for (int i = 0; i < input.getSimulationTime(); i++) {
+                                //System.out.println("Tiempo: " + (i + 1));
+                                // Generación de demandas para la unidad de tiempo
+                                List<Demand> demands = listaDemandas.get(i);
+                                //System.out.println("Demandas a insertar: " + demands.size());
 
-                            KShortestSimplePaths<Integer, Link> ksp = new KShortestSimplePaths<>(graph);
-                            for (Demand demand : demands) {
-                                demandaNumero++;
-                                //System.out.println("Insertando demanda " + demandaNumero++);
-                                //k caminos más cortos entre source y destination de la demanda actual
-                                List<GraphPath<Integer, Link>> kspaths = ksp.getPaths(demand.getSource(), demand.getDestination(), 5);
+                                KShortestSimplePaths<Integer, Link> ksp = new KShortestSimplePaths<>(graph);
+                                for (Demand demand : demands) {
+                                    demandaNumero++;
+                                    //System.out.println("Insertando demanda " + demandaNumero++);
+                                    //k caminos más cortos entre source y destination de la demanda actual
+                                    List<GraphPath<Integer, Link>> kspaths = ksp.getPaths(demand.getSource(), demand.getDestination(), 5);
 
-                                EstablishedRoute establishedRoute = null;
-                                switch (algorithm) {
-                                    case CORE_UNICO -> {
-                                        establishedRoute = Algorithms.ruteoCoreUnico(graph, kspaths, demand, input.getCapacity(), input.getCores(), input.getMaxCrosstalk());
+                                    EstablishedRoute establishedRoute = null;
+                                    switch (algorithm) {
+                                        case CORE_UNICO -> {
+                                            establishedRoute = Algorithms.ruteoCoreUnico(graph, kspaths, demand, input.getCapacity(), input.getCores(), input.getMaxCrosstalk(), crosstalkPerUnitLength);
+                                        }
+                                        case MULTIPLES_CORES -> {
+                                            establishedRoute = Algorithms.ruteoCoreMultiple(graph, kspaths, demand, input.getCapacity(), input.getCores(), input.getMaxCrosstalk(), crosstalkPerUnitLength);
+                                        }
+                                        default -> {
+                                            establishedRoute = null;
+                                        }
                                     }
-                                    case MULTIPLES_CORES -> {
-                                        establishedRoute = Algorithms.ruteoCoreMultiple(graph, kspaths, demand, input.getCapacity(), input.getCores(), input.getMaxCrosstalk());
+
+                                    if (establishedRoute == null || establishedRoute.getFsIndexBegin() == -1) {
+                                        //Bloqueo
+                                        //System.out.println("BLOQUEO");
+                                        demand.setBlocked(true);
+                                        insertData(algorithm.label(), topology.label(), "" + i, ""+demand.getId(), ""+erlang, crosstalkPerUnitLength.toString());
+                                        bloqueos++;
+                                    } else {
+                                        //Ruta establecida
+                                        //System.out.println("Cores: " + establishedRoute.getPathCores());
+                                        AssignFsResponse response = Utils.assignFs(graph, establishedRoute, crosstalkPerUnitLength);
+                                        establishedRoute = response.getRoute();
+                                        graph = response.getGraph();
+                                        establishedRoutes.add(establishedRoute);
+                                        kspList.add(kspaths);
                                     }
-                                    default -> {
-                                        establishedRoute = null;
-                                    }
+
                                 }
 
-                                if (establishedRoute == null || establishedRoute.getFsIndexBegin() == -1) {
-                                    //Bloqueo
-                                    //System.out.println("BLOQUEO");
-                                    demand.setBlocked(true);
-                                    insertData(algorithm.label(), topology.label(), "" + i, ""+demand.getId(), ""+erlang);
-                                    bloqueos++;
-                                } else {
-                                    //Ruta establecida
-                                    //System.out.println("Cores: " + establishedRoute.getPathCores());
-                                    AssignFsResponse response = Utils.assignFs(graph, establishedRoute);
-                                    establishedRoute = response.getRoute();
-                                    graph = response.getGraph();
-                                    establishedRoutes.add(establishedRoute);
-                                    kspList.add(kspaths);
+                                for (EstablishedRoute route : establishedRoutes) {
+                                    route.subLifeTime();
                                 }
 
-                            }
-
-                            for (EstablishedRoute route : establishedRoutes) {
-                                route.subLifeTime();
-                            }
-
-                            for (int ri = 0; ri < establishedRoutes.size(); ri++) {
-                                EstablishedRoute route = establishedRoutes.get(ri);
-                                if (route.getLifetime().equals(0)) {
-                                    Utils.deallocateFs(graph, route);
-                                    establishedRoutes.remove(ri);
-                                    kspList.remove(ri);
-                                    ri--;
+                                for (int ri = 0; ri < establishedRoutes.size(); ri++) {
+                                    EstablishedRoute route = establishedRoutes.get(ri);
+                                    if (route.getLifetime().equals(0)) {
+                                        Utils.deallocateFs(graph, route, crosstalkPerUnitLength);
+                                        establishedRoutes.remove(ri);
+                                        kspList.remove(ri);
+                                        ri--;
+                                    }
                                 }
                             }
+                            System.out.println("TOTAL DE BLOQUEOS: " + bloqueos);
+                            System.out.println("Cantidad de demandas: " + demandaNumero);
+                            System.out.println(System.lineSeparator());
                         }
-                        System.out.println("TOTAL DE BLOQUEOS: " + bloqueos);
-                        System.out.println("Cantidad de demandas: " + demandaNumero);
-                        System.out.println(System.lineSeparator());
                     }
                 }
             }
@@ -174,7 +180,7 @@ public class SimulatorTest {
      * @param demanda
      * @param erlang
      */
-    public static void insertData(String rsa, String topologia, String tiempo, String demanda, String erlang) {
+    public static void insertData(String rsa, String topologia, String tiempo, String demanda, String erlang, String h) {
         Connection c;
 
         Statement stmt;
@@ -188,8 +194,8 @@ public class SimulatorTest {
             c.setAutoCommit(false);
 
             stmt = c.createStatement();
-            String sql = "INSERT INTO Bloqueos (rsa, topologia, tiempo, demanda, erlang) "
-                    + "VALUES ('" + rsa + "','" + topologia + "', '" + tiempo + "' ,'" + demanda + "', " + "'"+ erlang + "')";
+            String sql = "INSERT INTO Bloqueos (rsa, topologia, tiempo, demanda, erlang, h) "
+                    + "VALUES ('" + rsa + "','" + topologia + "', '" + tiempo + "' ,'" + demanda + "', " + "'"+ erlang + "', " + "'" + h + "')";
             stmt.executeUpdate(sql);
             stmt.close();
             c.commit();
@@ -225,9 +231,14 @@ public class SimulatorTest {
                     + "erlang TEXT NOT NULL, "
                     + "rsa TEXT NOT NULL, "
                     + " topologia TEXT NOT NULL, "
+                    + " h TEXT NOT NULL, "
                     + " tiempo TEXT NOT NULL, "
                     + " demanda TEXT NOT NULL) ";
-            stmt.executeUpdate(dropTable);
+            try {
+                stmt.executeUpdate(dropTable);
+            } catch(Exception ex) {
+                
+            }
             stmt.executeUpdate(sql);
             stmt.close();
             c.close();

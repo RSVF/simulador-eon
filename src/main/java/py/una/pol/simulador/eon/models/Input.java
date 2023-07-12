@@ -30,5 +30,6 @@ public class Input {
     private Integer fsRangeMax;
     private Integer cores;
     private BigDecimal maxCrosstalk;
+    private List<Double> crosstalkPerUnitLenghtList;
 
 }

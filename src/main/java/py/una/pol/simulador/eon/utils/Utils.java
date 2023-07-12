@@ -102,7 +102,7 @@ public class Utils {
         return demands;
     }
 
-    public static double crosstalkPerUnitLenght() {
+    public static double crosstalkPerUnitLenght2() {
         double h;
         //h = (2 * Math.pow(0.000035, 2) * 0.05) / (4000000 * 0.00003);
         h = (2 * Math.pow(0.000035, 2) * 0.055) / (4000000 * 0.000045);
@@ -153,7 +153,7 @@ public class Utils {
     }
     
 
-    public static AssignFsResponse assignFs(Graph<Integer, Link> graph, EstablishedRoute establishedRoute) {
+    public static AssignFsResponse assignFs(Graph<Integer, Link> graph, EstablishedRoute establishedRoute, Double crosstalkPerUnitLength) {
         for (int j = 0; j < establishedRoute.getPath().size(); j++) {
             for (int i = establishedRoute.getFsIndexBegin(); i < establishedRoute.getFsIndexBegin() + establishedRoute.getFsWidth(); i++) {
                 establishedRoute.getPath().get(j).getCores().get(establishedRoute.getPathCores().get(j)).getFrequencySlots().get(i).setFree(false);
@@ -163,7 +163,7 @@ public class Utils {
                 // TODO: Asignar crosstalk
                 for(Integer coreIndex = 0; coreIndex<establishedRoute.getPath().get(j).getCores().size(); coreIndex++) {
                     if(!core.equals(coreIndex) && coreVecinos.contains(coreIndex)) {
-                        double crosstalk = XT(getCantidadVecinos(coreIndex), crosstalkPerUnitLenght(), establishedRoute.getPath().get(j).getDistance());
+                        double crosstalk = XT(getCantidadVecinos(coreIndex), crosstalkPerUnitLength, establishedRoute.getPath().get(j).getDistance());
                         BigDecimal crosstalkDB = toDB(crosstalk);
                         establishedRoute.getPath().get(j).getCores().get(coreIndex).getFrequencySlots().get(i).setCrosstalk(establishedRoute.getPath().get(j).getCores().get(coreIndex).getFrequencySlots().get(i).getCrosstalk().add(crosstalkDB));
                         
@@ -178,7 +178,7 @@ public class Utils {
         return response;
     }
 
-    public static void deallocateFs(Graph<Integer, Link> graph, EstablishedRoute establishedRoute) {
+    public static void deallocateFs(Graph<Integer, Link> graph, EstablishedRoute establishedRoute, Double crosstalkPerUnitLength) {
         for (int j = 0; j < establishedRoute.getPath().size(); j++) {
             for (int i = establishedRoute.getFsIndexBegin(); i < establishedRoute.getFsIndexBegin() + establishedRoute.getFsWidth(); i++) {
                 Integer core = establishedRoute.getPathCores().get(j);
@@ -188,7 +188,7 @@ public class Utils {
                 // TODO: Desasignar crosttalk
                 for(Integer coreIndex = 0; coreIndex<establishedRoute.getPath().get(j).getCores().size(); coreIndex++) {
                     if(!core.equals(coreIndex) && coreVecinos.contains(coreIndex)) {
-                        double crosstalk = XT(getCantidadVecinos(coreIndex), crosstalkPerUnitLenght(), establishedRoute.getPath().get(j).getDistance());
+                        double crosstalk = XT(getCantidadVecinos(coreIndex), crosstalkPerUnitLength, establishedRoute.getPath().get(j).getDistance());
                         BigDecimal crosstalkDB = toDB(crosstalk);
                         establishedRoute.getPath().get(j).getCores().get(coreIndex).getFrequencySlots().get(i).setCrosstalk(establishedRoute.getPath().get(j).getCores().get(coreIndex).getFrequencySlots().get(i).getCrosstalk().subtract(crosstalkDB));
                         

@@ -26,7 +26,7 @@ import py.una.pol.simulador.eon.utils.Utils;
  */
 public class Algorithms {
 
-    public static EstablishedRoute ruteoCoreUnico(Graph<Integer, Link> graph, List<GraphPath<Integer, Link>> kspaths, Demand demand, Integer capacity, Integer cores, BigDecimal maxCrosstalk) {
+    public static EstablishedRoute ruteoCoreUnico(Graph<Integer, Link> graph, List<GraphPath<Integer, Link>> kspaths, Demand demand, Integer capacity, Integer cores, BigDecimal maxCrosstalk, Double crosstalkPerUnitLength) {
         int k = 0;
 
         List<GraphPath<Integer, Link>> kspPlaced = new ArrayList<>();
@@ -63,13 +63,13 @@ public class Algorithms {
                                     BigDecimal crosstalkRuta = crosstalkFSList.get(fsCrosstalkIndex);
                                     if (isCrosstalkFree(bloqueFS.get(fsCrosstalkIndex), maxCrosstalk, crosstalkRuta)) {
                                         // Control de crosstalk en los cores vecinos
-                                        if (isNextToCrosstalkFreeCores(link, maxCrosstalk, core, i, demand.getFs())) {
+                                        if (isNextToCrosstalkFreeCores(link, maxCrosstalk, core, i, demand.getFs(), crosstalkPerUnitLength)) {
                                             enlacesLibres.add(link);
                                             kspCores.add(core);
                                             fsIndexBegin = i;
                                             selectedIndex = k;
                                             selectedFS = fsCrosstalkIndex;
-                                            crosstalkRuta = crosstalkRuta.add(Utils.toDB(Utils.XT(Utils.getCantidadVecinos(core), Utils.crosstalkPerUnitLenght(), link.getDistance())));
+                                            crosstalkRuta = crosstalkRuta.add(Utils.toDB(Utils.XT(Utils.getCantidadVecinos(core), crosstalkPerUnitLength, link.getDistance())));
                                             crosstalkFSList.set(fsCrosstalkIndex, crosstalkRuta);
                                             fsCrosstalkIndex = demand.getFs();
                                             // Si todos los enlaces tienen el mismo bloque de FS libre, se agrega la ruta a la lista de rutas establecidas.
@@ -103,7 +103,7 @@ public class Algorithms {
 
     }
 
-    public static EstablishedRoute ruteoCoreMultiple(Graph<Integer, Link> graph, List<GraphPath<Integer, Link>> kspaths, Demand demand, Integer capacity, Integer cores, BigDecimal maxCrosstalk) {
+    public static EstablishedRoute ruteoCoreMultiple(Graph<Integer, Link> graph, List<GraphPath<Integer, Link>> kspaths, Demand demand, Integer capacity, Integer cores, BigDecimal maxCrosstalk, Double crosstalkPerUnitLength) {
         int k = 0;
 
         List<GraphPath<Integer, Link>> kspPlaced = new ArrayList<>();
@@ -133,13 +133,13 @@ public class Algorithms {
                                 for (int fsCrosstalkIndex = 0; fsCrosstalkIndex < demand.getFs(); fsCrosstalkIndex++) {
                                     BigDecimal crosstalkRuta = crosstalkFSList.get(fsCrosstalkIndex);
                                     if (isCrosstalkFree(bloqueFS.get(fsCrosstalkIndex), maxCrosstalk, crosstalkRuta)) {
-                                        if (isNextToCrosstalkFreeCores(link, maxCrosstalk, core, i, demand.getFs())) {
+                                        if (isNextToCrosstalkFreeCores(link, maxCrosstalk, core, i, demand.getFs(), crosstalkPerUnitLength)) {
                                             enlacesLibres.add(link);
                                             kspCores.add(core);
                                             fsIndexBegin = i;
                                             selectedIndex = k;
                                             selectedFS = fsCrosstalkIndex;
-                                            crosstalkRuta = crosstalkRuta.add(Utils.toDB(Utils.XT(Utils.getCantidadVecinos(core), Utils.crosstalkPerUnitLenght(), link.getDistance())));
+                                            crosstalkRuta = crosstalkRuta.add(Utils.toDB(Utils.XT(Utils.getCantidadVecinos(core), crosstalkPerUnitLength, link.getDistance())));
                                             crosstalkFSList.set(fsCrosstalkIndex, crosstalkRuta);
                                             fsCrosstalkIndex = demand.getFs();
                                             // Si todos los enlaces tienen el mismo bloque de FS libre, se agrega la ruta a la lista de rutas establecidas.
@@ -187,12 +187,12 @@ public class Algorithms {
         return crosstalkActual.compareTo(maxCrosstalk) < 0;
     }
 
-    private static Boolean isNextToCrosstalkFreeCores(Link link, BigDecimal maxCrosstalk, Integer core, Integer fsIndexBegin, Integer fsWidth) {
+    private static Boolean isNextToCrosstalkFreeCores(Link link, BigDecimal maxCrosstalk, Integer core, Integer fsIndexBegin, Integer fsWidth, Double crosstalkPerUnitLength) {
         List<Integer> vecinos = Utils.getCoreVecinos(core);
         for (Integer coreVecino : vecinos) {
             for (Integer i = fsIndexBegin; i < fsIndexBegin + fsWidth; i++) {
                 FrequencySlot fsVecino = link.getCores().get(coreVecino).getFrequencySlots().get(i);
-                BigDecimal crosstalkASumar = Utils.toDB(Utils.XT(Utils.getCantidadVecinos(core), Utils.crosstalkPerUnitLenght(), link.getDistance()));
+                BigDecimal crosstalkASumar = Utils.toDB(Utils.XT(Utils.getCantidadVecinos(core), crosstalkPerUnitLength, link.getDistance()));
                 BigDecimal crosstalk = fsVecino.getCrosstalk().add(crosstalkASumar);
                 //BigDecimal crosstalkDB = Utils.toDB(crosstalk.doubleValue());
                 if (crosstalk.compareTo(maxCrosstalk) > 0) {
@@ -345,7 +345,7 @@ public class Algorithms {
 
     public static EstablishedRoute fa(Graph<Integer, Link> graph,
             List<GraphPath<Integer, Link>> kspaths, Demand demand,
-            Integer capacity, Integer cores, BigDecimal maxCrosstalk) {
+            Integer capacity, Integer cores, BigDecimal maxCrosstalk, Double crosstalkPerUnitLength) {
 
         // Representa la ocupación del espectro de todos los enlaces.
         Boolean so[][] = new Boolean[capacity][cores];
@@ -383,7 +383,7 @@ public class Algorithms {
                         for (int coreVecino = 0; coreVecino < cores; coreVecino++) {
                             if (coreVecino != core) {
                                 FrequencySlot fsVecino = link.getCores().get(coreVecino).getFrequencySlots().get(i);
-                                BigDecimal crosstalkASumar = Utils.toDB(Utils.XT(Utils.getCantidadVecinos(core), Utils.crosstalkPerUnitLenght(), link.getDistance()));
+                                BigDecimal crosstalkASumar = Utils.toDB(Utils.XT(Utils.getCantidadVecinos(core), crosstalkPerUnitLength, link.getDistance()));
                                 BigDecimal crosstalk = fsVecino.getCrosstalk().add(crosstalkASumar);
                                 //BigDecimal crosstalkDB = Utils.toDB(crosstalk.doubleValue());
                                 if (crosstalk.compareTo(maxCrosstalk) > 0) {
