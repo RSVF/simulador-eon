@@ -194,7 +194,7 @@ public class Algorithms {
             for (Integer i = fsIndexBegin; i < fsIndexBegin + fsWidth; i++) {
                 FrequencySlot fsVecino = link.getCores().get(coreVecino).getFrequencySlots().get(i);
                 if(!fsVecino.isFree()) {
-                    BigDecimal crosstalkASumar = Utils.toDB(Utils.XT(Utils.getCantidadVecinos(core), crosstalkPerUnitLength, link.getDistance()));
+                    BigDecimal crosstalkASumar = Utils.toDB(Utils.XT(1, crosstalkPerUnitLength, link.getDistance()));
                     BigDecimal crosstalk = fsVecino.getCrosstalk().add(crosstalkASumar);
                     //BigDecimal crosstalkDB = Utils.toDB(crosstalk.doubleValue());
                     if (crosstalk.compareTo(maxCrosstalk) >= 0) {
