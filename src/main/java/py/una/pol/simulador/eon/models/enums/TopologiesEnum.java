@@ -9,7 +9,8 @@ public enum TopologiesEnum {
 
     USNET("USNET", "topologies/usnet.json"),
     NSFNET("NSFNET", "topologies/nsfnet.json"),
-    EUNET("EUNET", "topologies/eunet.json");
+    EUNET("EUNET", "topologies/eunet.json"),
+    JPNNET("JPNNET", "topologies/jpn-net.json");
 
     private final String label;
 

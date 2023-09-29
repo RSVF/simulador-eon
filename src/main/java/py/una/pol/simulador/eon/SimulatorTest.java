@@ -37,8 +37,8 @@ public class SimulatorTest {
         input.setDemands(100000);
         input.setTopologies(new ArrayList<>());
         //input.getTopologies().add(TopologiesEnum.NSFNET);
-        input.getTopologies().add(TopologiesEnum.USNET);
-        //input.getTopologies().add(TopologiesEnum.EUNET);
+        //input.getTopologies().add(TopologiesEnum.USNET);
+        input.getTopologies().add(TopologiesEnum.JPNNET);
         input.setFsWidth(new BigDecimal("12.5"));
         input.setFsRangeMax(8);
         input.setFsRangeMin(2);
