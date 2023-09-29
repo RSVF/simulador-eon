@@ -185,7 +185,7 @@ public class Algorithms {
 
     private static Boolean isCrosstalkFree(FrequencySlot fs, BigDecimal maxCrosstalk, BigDecimal crosstalkRuta) {
         BigDecimal crosstalkActual = crosstalkRuta.add(fs.getCrosstalk());
-        return crosstalkActual.compareTo(maxCrosstalk) < 0;
+        return crosstalkActual.compareTo(maxCrosstalk) <= 0;
     }
 
     private static Boolean isNextToCrosstalkFreeCores(Link link, BigDecimal maxCrosstalk, Integer core, Integer fsIndexBegin, Integer fsWidth, Double crosstalkPerUnitLength) {
@@ -197,7 +197,7 @@ public class Algorithms {
                     BigDecimal crosstalkASumar = Utils.toDB(Utils.XT(Utils.getCantidadVecinos(core), crosstalkPerUnitLength, link.getDistance()));
                     BigDecimal crosstalk = fsVecino.getCrosstalk().add(crosstalkASumar);
                     //BigDecimal crosstalkDB = Utils.toDB(crosstalk.doubleValue());
-                    if (crosstalk.compareTo(maxCrosstalk) > 0) {
+                    if (crosstalk.compareTo(maxCrosstalk) >= 0) {
                         return false;
                     }
                 }
