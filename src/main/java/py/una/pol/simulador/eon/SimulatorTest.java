@@ -40,9 +40,9 @@ public class SimulatorTest {
 
         input.setDemands(100000);
         input.setTopologies(new ArrayList<>());
-        input.getTopologies().add(TopologiesEnum.NSFNET);
+        //input.getTopologies().add(TopologiesEnum.NSFNET);
         input.getTopologies().add(TopologiesEnum.USNET);
-        input.getTopologies().add(TopologiesEnum.EUNET);
+        //input.getTopologies().add(TopologiesEnum.EUNET);
         input.setFsWidth(new BigDecimal("12.5"));
         input.setFsRangeMax(8);
         input.setFsRangeMin(2);
@@ -75,6 +75,8 @@ public class SimulatorTest {
                     // Se genera la red de acuerdo a los datos de entrada
                     Graph<Integer, Link> graph = Utils.createTopology(topology,
                             input.getCores(), input.getFsWidth(), input.getCapacity());
+                    
+                    GraphUtils.createImage(graph, topology.label());
 
                     // Contador de demandas utilizado para identificación
                     Integer demandsQ = 1;
@@ -83,7 +85,7 @@ public class SimulatorTest {
                         List<Demand> demands = Utils.generateDemands(input.getLambda(),
                                 input.getSimulationTime(), input.getFsRangeMin(),
                                 input.getFsRangeMax(), graph.vertexSet().size(),
-                                input.getErlang() / input.getLambda(), demandsQ);
+                                input.getErlang() / input.getLambda(), demandsQ, i);
 
                         demandsQ += demands.size();
                         listaDemandas.add(demands);

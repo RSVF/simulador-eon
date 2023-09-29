@@ -81,10 +81,11 @@ public class Utils {
      * @param cantNodos
      * @param HT
      * @param demandId Identificador de la última demanda generada
+     * @param insertionTime
      * @return
      */
     public static List<Demand> generateDemands(Integer lambda, Integer totalTime,
-            Integer fsMin, Integer fsMax, Integer cantNodos, Integer HT, Integer demandId) {
+            Integer fsMin, Integer fsMax, Integer cantNodos, Integer HT, Integer demandId, Integer insertionTime) {
         List<Demand> demands = new ArrayList<>();
         Random rand;
         Integer demandasQuantity = MathUtils.poisson(lambda);
@@ -97,7 +98,7 @@ public class Utils {
                 destination = rand.nextInt(cantNodos);
             }
             Integer tLife = MathUtils.getLifetime(HT);
-            demands.add(new Demand(j, source, destination, fs, tLife, false));
+            demands.add(new Demand(j, source, destination, fs, tLife, false, insertionTime));
         }
         return demands;
     }

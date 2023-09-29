@@ -11,6 +11,7 @@ public class Demand {
     private Integer fs;
     private Integer lifetime;
     private Boolean blocked;
+    private final Integer insertionTime;
 
     /**
      * Constructor with all parameters
@@ -21,15 +22,17 @@ public class Demand {
      * @param fs Number of frequency slots required
      * @param lifetime Lifetime of the connection
      * @param blocked Indicates if the demand has been blocked or not
+     * @param insertionTime
      */
     public Demand(Integer id, Integer source, Integer destination, Integer fs,
-            Integer lifetime, Boolean blocked) {
+            Integer lifetime, Boolean blocked, Integer insertionTime) {
         this.id = id;
         this.source = source;
         this.destination = destination;
         this.fs = fs;
         this.lifetime = lifetime;
         this.blocked = blocked;
+        this.insertionTime = insertionTime;
     }
 
     @Override
