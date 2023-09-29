@@ -11,15 +11,11 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import org.jgrapht.Graph;
-import org.jgrapht.GraphPath;
-import org.jgrapht.alg.shortestpath.KShortestSimplePaths;
 import py.una.pol.simulador.eon.models.AssignFsResponse;
 import py.una.pol.simulador.eon.models.Demand;
 import py.una.pol.simulador.eon.models.EstablishedRoute;
-import py.una.pol.simulador.eon.models.FrequencySlot;
 import py.una.pol.simulador.eon.models.Input;
 import py.una.pol.simulador.eon.models.Link;
 import py.una.pol.simulador.eon.models.enums.RSAEnum;
@@ -52,7 +48,7 @@ public class SimulatorTest {
         input.setErlang(erlang);
         input.setAlgorithms(new ArrayList<>());
         input.getAlgorithms().add(RSAEnum.MULTIPLES_CORES);
-        input.getAlgorithms().add(RSAEnum.CORE_UNICO);
+        //input.getAlgorithms().add(RSAEnum.CORE_UNICO);
         input.setSimulationTime(MathUtils.getSimulationTime(input.getDemands(), input.getLambda()));
         input.setMaxCrosstalk(new BigDecimal("0.003162277660168379331998893544")); // XT = -25 dB
         //input.setMaxCrosstalk(new BigDecimal("0.031622776601683793319988935444")); // XT = -15 dB
@@ -67,7 +63,7 @@ public class SimulatorTest {
         try {
             createTable();
             // Datos de entrada
-            for (int erlang = 7000; erlang <= 11000; erlang = erlang + 500) {
+            for (int erlang = 7000; erlang <= 7500; erlang = erlang + 500) {
 
                 Input input = new SimulatorTest().getTestingInput(erlang);
                 for (TopologiesEnum topology : input.getTopologies()) {
@@ -75,8 +71,8 @@ public class SimulatorTest {
                     // Se genera la red de acuerdo a los datos de entrada
                     Graph<Integer, Link> graph = Utils.createTopology(topology,
                             input.getCores(), input.getFsWidth(), input.getCapacity());
-                    
-                    GraphUtils.createImage(graph, topology.label());
+
+                    //GraphUtils.createImage(graph, topology.label());
 
                     // Contador de demandas utilizado para identificación
                     Integer demandsQ = 1;
@@ -91,14 +87,12 @@ public class SimulatorTest {
                         listaDemandas.add(demands);
                     }
 
-                    for(Double crosstalkPerUnitLength : input.getCrosstalkPerUnitLenghtList()) {
+                    for (Double crosstalkPerUnitLength : input.getCrosstalkPerUnitLenghtList()) {
                         for (RSAEnum algorithm : input.getAlgorithms()) {
                             // Lista de rutas establecidas durante la simulación
                             List<EstablishedRoute> establishedRoutes = new ArrayList<>();
 
                             System.out.println("Inicializando simulación del RSA " + algorithm.label() + " para erlang: " + (erlang) + " para la topología " + topology.label() + " y H = " + crosstalkPerUnitLength.toString());
-
-                            List<List<GraphPath<Integer, Link>>> kspList = new ArrayList<>();
 
                             int demandaNumero = 1;
                             int bloqueos = 0;
@@ -108,21 +102,18 @@ public class SimulatorTest {
                                 // Generación de demandas para la unidad de tiempo
                                 List<Demand> demands = listaDemandas.get(i);
                                 //System.out.println("Demandas a insertar: " + demands.size());
-
-                                KShortestSimplePaths<Integer, Link> ksp = new KShortestSimplePaths<>(graph);
                                 for (Demand demand : demands) {
                                     demandaNumero++;
                                     //System.out.println("Insertando demanda " + demandaNumero++);
                                     //k caminos más cortos entre source y destination de la demanda actual
-                                    List<GraphPath<Integer, Link>> kspaths = ksp.getPaths(demand.getSource(), demand.getDestination(), 5);
 
-                                    EstablishedRoute establishedRoute = null;
+                                    EstablishedRoute establishedRoute;
                                     switch (algorithm) {
                                         case CORE_UNICO -> {
-                                            establishedRoute = Algorithms.ruteoCoreUnico(graph, kspaths, demand, input.getCapacity(), input.getCores(), input.getMaxCrosstalk(), crosstalkPerUnitLength);
+                                            establishedRoute = Algorithms.ruteoCoreUnico(graph, demand, input.getCapacity(), input.getCores(), input.getMaxCrosstalk(), crosstalkPerUnitLength);
                                         }
                                         case MULTIPLES_CORES -> {
-                                            establishedRoute = Algorithms.ruteoCoreMultiple(graph, kspaths, demand, input.getCapacity(), input.getCores(), input.getMaxCrosstalk(), crosstalkPerUnitLength);
+                                            establishedRoute = Algorithms.ruteoCoreMultiple(graph, demand, input.getCapacity(), input.getCores(), input.getMaxCrosstalk(), crosstalkPerUnitLength);
                                         }
                                         default -> {
                                             establishedRoute = null;
@@ -133,7 +124,7 @@ public class SimulatorTest {
                                         //Bloqueo
                                         //System.out.println("BLOQUEO");
                                         demand.setBlocked(true);
-                                        insertData(algorithm.label(), topology.label(), "" + i, ""+demand.getId(), ""+erlang, crosstalkPerUnitLength.toString());
+                                        insertData(algorithm.label(), topology.label(), "" + i, "" + demand.getId(), "" + erlang, crosstalkPerUnitLength.toString());
                                         bloqueos++;
                                     } else {
                                         //Ruta establecida
@@ -142,7 +133,6 @@ public class SimulatorTest {
                                         establishedRoute = response.getRoute();
                                         graph = response.getGraph();
                                         establishedRoutes.add(establishedRoute);
-                                        kspList.add(kspaths);
                                     }
 
                                 }
@@ -156,7 +146,6 @@ public class SimulatorTest {
                                     if (route.getLifetime().equals(0)) {
                                         Utils.deallocateFs(graph, route, crosstalkPerUnitLength);
                                         establishedRoutes.remove(ri);
-                                        kspList.remove(ri);
                                         ri--;
                                     }
                                 }
@@ -168,8 +157,8 @@ public class SimulatorTest {
                     }
                 }
             }
-        } catch (Exception ex) {
-            ex.printStackTrace();
+        } catch (IOException | IllegalArgumentException ex) {
+            System.out.println(ex.getMessage());
         }
     }
 
@@ -181,6 +170,7 @@ public class SimulatorTest {
      * @param tiempo
      * @param demanda
      * @param erlang
+     * @param h
      */
     public static void insertData(String rsa, String topologia, String tiempo, String demanda, String erlang, String h) {
         Connection c;
@@ -197,7 +187,7 @@ public class SimulatorTest {
 
             stmt = c.createStatement();
             String sql = "INSERT INTO Bloqueos (rsa, topologia, tiempo, demanda, erlang, h) "
-                    + "VALUES ('" + rsa + "','" + topologia + "', '" + tiempo + "' ,'" + demanda + "', " + "'"+ erlang + "', " + "'" + h + "')";
+                    + "VALUES ('" + rsa + "','" + topologia + "', '" + tiempo + "' ,'" + demanda + "', " + "'" + erlang + "', " + "'" + h + "')";
             stmt.executeUpdate(sql);
             stmt.close();
             c.commit();
@@ -225,7 +215,7 @@ public class SimulatorTest {
             System.out.println("Database Opened...\n");
 
             stmt = c.createStatement();
-            
+
             String dropTable = "DROP TABLE Bloqueos ";
 
             String sql = "CREATE TABLE IF NOT EXISTS Bloqueos "
@@ -238,8 +228,8 @@ public class SimulatorTest {
                     + " demanda TEXT NOT NULL) ";
             try {
                 stmt.executeUpdate(dropTable);
-            } catch(Exception ex) {
-                
+            } catch (SQLException ex) {
+                System.out.println(ex.getMessage());
             }
             stmt.executeUpdate(sql);
             stmt.close();
