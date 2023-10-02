@@ -53,9 +53,9 @@ public class SimulatorTest {
         input.setMaxCrosstalk(new BigDecimal("0.003162277660168379331998893544")); // XT = -25 dB
         //input.setMaxCrosstalk(new BigDecimal("0.031622776601683793319988935444")); // XT = -15 dB
         input.setCrosstalkPerUnitLenghtList(new ArrayList<>());
-        input.getCrosstalkPerUnitLenghtList().add((2 * Math.pow(0.0035, 2) * 0.080) / (4000000 * 0.000045));
-        input.getCrosstalkPerUnitLenghtList().add((2 * Math.pow(0.00040, 2) * 0.050) / (4000000 * 0.000040));
-        input.getCrosstalkPerUnitLenghtList().add((2 * Math.pow(0.0000316, 2) * 0.055) / (4000000 * 0.000045));
+        //input.getCrosstalkPerUnitLenghtList().add((2 * Math.pow(0.0035, 2) * 0.080) / (4000000 * 0.000045)); //         h = 1,089E-08
+        //input.getCrosstalkPerUnitLenghtList().add((2 * Math.pow(0.00040, 2) * 0.050) / (4000000 * 0.000040)); //      h= 1,000E-10
+        input.getCrosstalkPerUnitLenghtList().add((2 * Math.pow(0.0000316, 2) * 0.055) / (4000000 * 0.000045)); //    h= 6,102E-13
         return input;
     }
 
@@ -64,7 +64,7 @@ public class SimulatorTest {
              
             createTable();
             // Datos de entrada
-            for (int erlang = 7000; erlang <= 7500; erlang = erlang + 500) {
+            for (int erlang = 5500; erlang <= 5500; erlang = erlang + 100) {
 
                 Input input = new SimulatorTest().getTestingInput(erlang);
                 for (TopologiesEnum topology : input.getTopologies()) {
@@ -90,11 +90,10 @@ public class SimulatorTest {
 
                     for (Double crosstalkPerUnitLength : input.getCrosstalkPerUnitLenghtList()) {
                         for (RSAEnum algorithm : input.getAlgorithms()) {
+                            graph = Utils.createTopology(topology,input.getCores(), input.getFsWidth(), input.getCapacity());
                             // Lista de rutas establecidas durante la simulación
                             List<EstablishedRoute> establishedRoutes = new ArrayList<>();
-
                             System.out.println("Inicializando simulación del RSA " + algorithm.label() + " para erlang: " + (erlang) + " para la topología " + topology.label() + " y H = " + crosstalkPerUnitLength.toString());
-
                             int demandaNumero = 1;
                             int bloqueos = 0;
                             // Iteración de unidades de tiempo
