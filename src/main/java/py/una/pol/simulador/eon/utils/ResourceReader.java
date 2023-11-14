@@ -2,6 +2,11 @@ package py.una.pol.simulador.eon.utils;
 
 import java.io.InputStream;
 
+/**
+ * Clase para lectura de recursos externos
+ *
+ * @author Néstor E. Reinoso Wood
+ */
 public class ResourceReader {
 
     /**

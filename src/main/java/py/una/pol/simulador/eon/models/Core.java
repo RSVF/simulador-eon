@@ -7,17 +7,28 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.Data;
 
+/**
+ * Núcleo de un enlace de la red
+ *
+ * @author Néstor E. Reinoso Wood
+ */
 @Data
 public class Core implements Serializable {
 
+    /**
+     * Ancho de banda del núcleo
+     */
     private BigDecimal bandwidth;
+    /**
+     * Ranuras de frecuencia del núcleo
+     */
     private List<FrequencySlot> frequencySlots;
 
     /**
-     * Constructor with quantity of Frequency Slots
+     * Constructor con cantidad de Ranuras de Frecuencia
      *
-     * @param bandwidth Bandwidth of the core
-     * @param frequencySlotQuantity Number of frequency slots available
+     * @param bandwidth Ancho de banda del nucleo
+     * @param frequencySlotQuantity Cantidad de ranuras disponibles
      */
     public Core(BigDecimal bandwidth, Integer frequencySlotQuantity) {
         this.bandwidth = bandwidth;
@@ -28,10 +39,10 @@ public class Core implements Serializable {
     }
 
     /**
-     * Constructor with list of Frequency Slots
+     * Constructor con una lista de Ranuras de Frecuencia
      *
-     * @param bandwidth Bandwidth of the core
-     * @param frequencySlots Number of frequency slots available
+     * @param bandwidth Ancho de banda del núcleo
+     * @param frequencySlots Ranuras de frecuencias disponibles
      */
     public Core(BigDecimal bandwidth, List<FrequencySlot> frequencySlots) {
         this.bandwidth = bandwidth;

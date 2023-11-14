@@ -4,14 +4,36 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import lombok.Data;
 
+/**
+ * Ranura de frecuencia en los núcleos de las fibras
+ *
+ * @author Néstor E. Reinoso Wood
+ */
 @Data
 public class FrequencySlot implements Serializable {
 
+    /**
+     * Tiempo de vida de la conexión insertada
+     */
     private int lifetime;
+    /**
+     * Indica si la ranura está o no ocupada
+     */
     private boolean free;
+    /**
+     * Ancho de banda de la ranura
+     */
     private BigDecimal fsWidh;
+    /**
+     * Crosstalk actual sobre la ranura
+     */
     private BigDecimal crosstalk;
 
+    /**
+     * Constructor
+     *
+     * @param fsWidh Tamaño de la ranura de frecuencia en GHz.
+     */
     public FrequencySlot(BigDecimal fsWidh) {
         this.fsWidh = fsWidh;
         this.lifetime = 0;
@@ -20,13 +42,11 @@ public class FrequencySlot implements Serializable {
     }
 
     /**
-     * Subtracts a unit of time from the frequency slot, if it's possible
+     * Substrae una unidad de tiempo de la ranura de frecuencias, si es posible
      *
      * @return  <ul>
-     * <li><code>true</code> If the frequency slot is occupied after the
-     * subtraction</li>
-     * <li><code>false</code> If the frequency slot is free after the
-     * subtraction</li>
+     * <li><code>true</code> Si la ranura está ocupada despues de la resta</li>
+     * <li><code>false</code> Si la ranura está libre despues de la resta</li>
      * </ul>
      */
     public boolean subLifetime() {

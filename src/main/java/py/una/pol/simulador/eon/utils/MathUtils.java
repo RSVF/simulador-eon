@@ -10,9 +10,11 @@ package py.una.pol.simulador.eon.utils;
 public class MathUtils {
 
     /**
+     * Formula para la distribución de poisson
      *
-     * @param lambda
-     * @return
+     * @param lambda Cantidad de demandas promedio a insertar por unidad de
+     * tiempo
+     * @return Valor calculado
      */
     public static Integer poisson(Integer lambda) {
         Integer b, bFact;
@@ -31,9 +33,10 @@ public class MathUtils {
     }
 
     /**
-     * 
-     * @param ht
-     * @return 
+     * Calcula el tiempo de vida de la demanda
+     *
+     * @param ht Erlang/Lambda
+     * @return Tiempo de vida calculado
      */
     public static Integer getLifetime(Integer ht) {
         Double b;
@@ -54,6 +57,12 @@ public class MathUtils {
         return b.intValue();
     }
 
+    /**
+     * Calcula el factorial de un número
+     *
+     * @param n Número de entrada
+     * @return Factorial de n
+     */
     public static Integer factorial(Integer n) {
         Integer resultado = 1;
         for (Integer i = 1; i <= n; i++) {
@@ -61,9 +70,17 @@ public class MathUtils {
         }
         return resultado;
     }
-    
+
+    /**
+     * Obtiene el tiempo de simulación en base a la cantidad de demandas total y
+     * la cantidad de demandas promedio a insertar por unidad de tiempo
+     *
+     * @param demands Cantidad de demandas total
+     * @param lambda Cantidad de demandas promedio a insertar
+     * @return Tiempo de simulación
+     */
     public static Integer getSimulationTime(Integer demands, Integer lambda) {
-        Integer simulationTime;
-        return simulationTime=demands/lambda;
+        Integer simulationTime = demands / lambda;
+        return simulationTime;
     }
 }

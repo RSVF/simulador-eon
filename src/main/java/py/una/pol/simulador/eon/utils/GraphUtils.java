@@ -22,11 +22,19 @@ import org.jgrapht.ext.JGraphXAdapter;
 import py.una.pol.simulador.eon.models.Link;
 
 /**
+ * Utilería para el manejo de gráficos
  *
  * @author Néstor E. Reinoso Wood
  */
 public class GraphUtils {
 
+    /**
+     * Crea una imagen de la topología utilizada
+     *
+     * @param g Grafo de la red
+     * @param fileName Nombre del archivo a generar
+     * @throws IOException Error de I/O
+     */
     public static void createImage(Graph<Integer, Link> g, String fileName) throws IOException {
         JGraphXAdapter<Integer, Link> graphAdapter
                 = new JGraphXAdapter<>(g);

@@ -21,7 +21,6 @@ import py.una.pol.simulador.eon.models.Link;
 import py.una.pol.simulador.eon.models.enums.RSAEnum;
 import py.una.pol.simulador.eon.models.enums.TopologiesEnum;
 import py.una.pol.simulador.eon.rsa.Algorithms;
-import py.una.pol.simulador.eon.utils.GraphUtils;
 import py.una.pol.simulador.eon.utils.MathUtils;
 import py.una.pol.simulador.eon.utils.Utils;
 
@@ -31,14 +30,20 @@ import py.una.pol.simulador.eon.utils.Utils;
  */
 public class SimulatorTest {
 
+    /**
+     * Configuración inicial para el simulador
+     *
+     * @param erlang Erlang para la simulación
+     * @return Datos de entrada del simulador
+     */
     private Input getTestingInput(Integer erlang) {
         Input input = new Input();
 
         input.setDemands(100000);
         input.setTopologies(new ArrayList<>());
-        //input.getTopologies().add(TopologiesEnum.NSFNET);
+        input.getTopologies().add(TopologiesEnum.NSFNET);
         //input.getTopologies().add(TopologiesEnum.USNET);
-        input.getTopologies().add(TopologiesEnum.JPNNET);
+        //input.getTopologies().add(TopologiesEnum.JPNNET);
         input.setFsWidth(new BigDecimal("12.5"));
         input.setFsRangeMax(8);
         input.setFsRangeMin(2);
@@ -47,24 +52,28 @@ public class SimulatorTest {
         input.setLambda(5);
         input.setErlang(erlang);
         input.setAlgorithms(new ArrayList<>());
-        input.getAlgorithms().add(RSAEnum.CORE_UNICO);
+        //input.getAlgorithms().add(RSAEnum.CORE_UNICO);
         input.getAlgorithms().add(RSAEnum.MULTIPLES_CORES);
         input.setSimulationTime(MathUtils.getSimulationTime(input.getDemands(), input.getLambda()));
         input.setMaxCrosstalk(new BigDecimal("0.003162277660168379331998893544")); // XT = -25 dB
         //input.setMaxCrosstalk(new BigDecimal("0.031622776601683793319988935444")); // XT = -15 dB
         input.setCrosstalkPerUnitLenghtList(new ArrayList<>());
         input.getCrosstalkPerUnitLenghtList().add((2 * Math.pow(0.0035, 2) * 0.080) / (4000000 * 0.000045));
-        input.getCrosstalkPerUnitLenghtList().add((2 * Math.pow(0.00040, 2) * 0.050) / (4000000 * 0.000040));
-        input.getCrosstalkPerUnitLenghtList().add((2 * Math.pow(0.0000316, 2) * 0.055) / (4000000 * 0.000045));
+        //input.getCrosstalkPerUnitLenghtList().add((2 * Math.pow(0.00040, 2) * 0.050) / (4000000 * 0.000040));
+        //input.getCrosstalkPerUnitLenghtList().add((2 * Math.pow(0.0000316, 2) * 0.055) / (4000000 * 0.000045));
         return input;
     }
 
+    /**
+     * Simulador
+     *
+     * @param args Argumentos de entrada (Vacío)
+     */
     public static void main(String[] args) {
         try {
-             
             createTable();
             // Datos de entrada
-            for (int erlang = 7000; erlang <= 7500; erlang = erlang + 500) {
+            for (int erlang = 2000; erlang <= 2000; erlang = erlang + 1000) {
 
                 Input input = new SimulatorTest().getTestingInput(erlang);
                 for (TopologiesEnum topology : input.getTopologies()) {
@@ -74,7 +83,6 @@ public class SimulatorTest {
                             input.getCores(), input.getFsWidth(), input.getCapacity());
 
                     //GraphUtils.createImage(graph, topology.label());
-
                     // Contador de demandas utilizado para identificación
                     Integer demandsQ = 1;
                     List<List<Demand>> listaDemandas = new ArrayList<>();
@@ -90,6 +98,8 @@ public class SimulatorTest {
 
                     for (Double crosstalkPerUnitLength : input.getCrosstalkPerUnitLenghtList()) {
                         for (RSAEnum algorithm : input.getAlgorithms()) {
+                            graph = Utils.createTopology(topology,
+                                    input.getCores(), input.getFsWidth(), input.getCapacity());
                             // Lista de rutas establecidas durante la simulación
                             List<EstablishedRoute> establishedRoutes = new ArrayList<>();
 
@@ -99,7 +109,7 @@ public class SimulatorTest {
                             int bloqueos = 0;
                             // Iteración de unidades de tiempo
                             for (int i = 0; i < input.getSimulationTime(); i++) {
-                                //System.out.println("Tiempo: " + (i + 1));
+                                System.out.println("Tiempo: " + (i + 1));
                                 // Generación de demandas para la unidad de tiempo
                                 List<Demand> demands = listaDemandas.get(i);
                                 //System.out.println("Demandas a insertar: " + demands.size());
@@ -166,12 +176,12 @@ public class SimulatorTest {
     /**
      * Inserta los datos en la BD
      *
-     * @param rsa
-     * @param topologia
-     * @param tiempo
-     * @param demanda
-     * @param erlang
-     * @param h
+     * @param rsa Algoritmo RSA utilizado
+     * @param topologia Topología de la red
+     * @param tiempo Tiempo del bloqueo
+     * @param demanda Demanda bloqueada
+     * @param erlang Erlang de la simulación
+     * @param h Crosstalk por unidad de longitud de la simulación
      */
     public static void insertData(String rsa, String topologia, String tiempo, String demanda, String erlang, String h) {
         Connection c;
@@ -200,7 +210,7 @@ public class SimulatorTest {
     }
 
     /**
-     *
+     * Generación de la tabla de resultados
      */
     public static void createTable() {
         Connection c;

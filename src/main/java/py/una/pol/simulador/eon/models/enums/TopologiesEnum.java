@@ -7,19 +7,41 @@ package py.una.pol.simulador.eon.models.enums;
  */
 public enum TopologiesEnum {
 
+    /**
+     * Topología USNet
+     */
     USNET("USNET", "topologies/usnet.json"),
+    /**
+     * Topología NSFNET
+     */
     NSFNET("NSFNET", "topologies/nsfnet.json"),
+    /**
+     * Topología EUNET
+     */
     EUNET("EUNET", "topologies/eunet.json"),
+    /**
+     * Topología JPNNET
+     */
     JPNNET("JPNNET", "topologies/jpn-net.json");
 
     private final String label;
 
     private final String filePath;
 
+    /**
+     * Etiqueta de la topología
+     *
+     * @return Etiqueta de la topología
+     */
     public String label() {
         return label;
     }
 
+    /**
+     * Ubicación del archivo de configuración
+     *
+     * @return Ubicación del archivo de configuración
+     */
     public String filePath() {
         return filePath;
     }

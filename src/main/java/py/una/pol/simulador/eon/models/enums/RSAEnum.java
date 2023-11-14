@@ -7,17 +7,33 @@ package py.una.pol.simulador.eon.models.enums;
  */
 public enum RSAEnum {
 
+    /**
+     * RSA sin conmutación de núcleos
+     */
     CORE_UNICO("Core único", "ruteoCoreUnico"),
+    /**
+     * RSA con conmutación de núcleos
+     */
     MULTIPLES_CORES("Múltiples Cores", "ruteoCoreMultiple");
 
     private final String label;
 
     private final String method;
 
+    /**
+     * Etiquieta del RSA
+     *
+     * @return Etiquieta del RSA
+     */
     public String label() {
         return label;
     }
 
+    /**
+     * Nombre del método a ejecutar
+     *
+     * @return Nombre del método a ejecutar
+     */
     public String method() {
         return method;
     }
