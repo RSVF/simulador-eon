@@ -102,9 +102,7 @@ public class SimulatorTest {
                                     input.getCores(), input.getFsWidth(), input.getCapacity());
                             // Lista de rutas establecidas durante la simulación
                             List<EstablishedRoute> establishedRoutes = new ArrayList<>();
-
                             System.out.println("Inicializando simulación del RSA " + algorithm.label() + " para erlang: " + (erlang) + " para la topología " + topology.label() + " y H = " + crosstalkPerUnitLength.toString());
-
                             int demandaNumero = 1;
                             int bloqueos = 0;
                             // Iteración de unidades de tiempo
