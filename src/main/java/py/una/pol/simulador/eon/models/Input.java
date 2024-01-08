@@ -71,5 +71,9 @@ public class Input {
      * simular
      */
     private List<Double> crosstalkPerUnitLenghtList;
+    /**
+     * Cantidad de veces a desfragmentar
+     */
+    private Integer defragmentationCount;;
 
 }

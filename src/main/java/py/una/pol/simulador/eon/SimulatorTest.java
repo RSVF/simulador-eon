@@ -7,12 +7,8 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-
 import org.jgrapht.Graph;
-
 import py.una.pol.simulador.eon.models.AssignFsResponse;
 import py.una.pol.simulador.eon.models.Demand;
 import py.una.pol.simulador.eon.models.EstablishedRoute;
@@ -23,7 +19,6 @@ import py.una.pol.simulador.eon.models.enums.TopologiesEnum;
 import py.una.pol.simulador.eon.rsa.Algorithms;
 import py.una.pol.simulador.eon.utils.MathUtils;
 import py.una.pol.simulador.eon.utils.Utils;
-
 
 public class SimulatorTest {
 
@@ -61,7 +56,6 @@ public class SimulatorTest {
 		
 		// Algoritmos RSA
 		input.setAlgorithms(new ArrayList<>());
-		// input.getAlgorithms().add(RSAEnum.CORE_UNICO);
 		input.getAlgorithms().add(RSAEnum.MULTIPLES_CORES);
 		
 		// Cantidad de intervalos de tiempo de la simulación
@@ -77,6 +71,9 @@ public class SimulatorTest {
 		//input.getCrosstalkPerUnitLenghtList().add((2 * Math.pow(0.0035, 2) * 0.080) / (4000000 * 0.000045));  // h = 1,089E-08
 		//input.getCrosstalkPerUnitLenghtList().add((2 * Math.pow(0.00040, 2) * 0.050) / (4000000 * 0.000040)); // h= 1,000E-10
 		input.getCrosstalkPerUnitLenghtList().add((2 * Math.pow(0.0000316, 2) * 0.055) / (4000000 * 0.000045));  // h= 6,102E-13
+		
+		//Cantidad de veces que se va a realizar la desfragmentación
+		input.setDefragmentationCount(2);
 		return input;
 	}
 
@@ -88,8 +85,16 @@ public class SimulatorTest {
 			// Datos de entrada
 			Input input = new SimulatorTest().getTestingInput();
 			Graph<Integer, Link> graph = null;
+			Integer intervalosDeTiempoDF = null;
+			Integer countDF = null;
+			Integer nDF = 0;
 			String topologiaUtilizada = Constants.SIMULADOR_TOPOLOGIA_NSFNET;
-			Integer intervalosDeTiempo = input.getSimulationTime();
+			Integer intervalosDeTiempoRSA = input.getSimulationTime();
+			
+			if(input.getDefragmentationCount() != null && input.getDefragmentationCount() != 0) {
+				 intervalosDeTiempoDF = (int) Math.round(intervalosDeTiempoRSA / (input.getDefragmentationCount() + 1.0));
+				 countDF = 0;
+			}
 			
 			for (TopologiesEnum topology : input.getTopologies()) {
 				if(topology.toString().equals(topologiaUtilizada)) {
@@ -98,8 +103,8 @@ public class SimulatorTest {
 					// Generación de demandas a ser utilizadas en la simulación
 					Integer demandsQ = 1;
 					List<List<Demand>> listaDemandas = new ArrayList<>();
-					for (int i = 0; i < intervalosDeTiempo; i++) {
-						List<Demand> demands = Utils.generateDemands(input.getLambda(), intervalosDeTiempo,
+					for (int i = 0; i < intervalosDeTiempoRSA; i++) {
+						List<Demand> demands = Utils.generateDemands(input.getLambda(), intervalosDeTiempoRSA,
 								input.getFsRangeMin(), input.getFsRangeMax(), graph.vertexSet().size(),
 								input.getErlang() / input.getLambda(), demandsQ, i);
 
@@ -116,28 +121,18 @@ public class SimulatorTest {
 									+ crosstalkPerUnitLength.toString());
 							int demandaNumero = 1;
 							int bloqueos = 0;
-							// Iteración de intervalos de tiempo
-							for (int i = 0; i < intervalosDeTiempo; i++) {
+							// Iteración de intervalos de tiempo de la simulacion
+							for (int i = 0; i < intervalosDeTiempoRSA; i++) {
 								
 								//  Demandas a ser transmitidas en el intervalo de tiempo i
 								List<Demand> demands = listaDemandas.get(i);
 								for (Demand demand : demands) {
 									demandaNumero++;
 									EstablishedRoute establishedRoute;
-									switch (algorithm) {
-									case CORE_UNICO -> {
-										establishedRoute = Algorithms.ruteoCoreUnico(graph, demand, input.getCapacity(),
+									// Algoritmo RSA con conmutación de nucleos
+									establishedRoute = Algorithms.ruteoCoreMultiple(graph, demand, input.getCapacity(),
 												input.getCores(), input.getMaxCrosstalk(), crosstalkPerUnitLength);
-									}
-									case MULTIPLES_CORES -> {
-										establishedRoute = Algorithms.ruteoCoreMultiple(graph, demand, input.getCapacity(),
-												input.getCores(), input.getMaxCrosstalk(), crosstalkPerUnitLength);
-									}
-									default -> {
-										establishedRoute = null;
-									}
-									}
-
+									
 									if (establishedRoute == null || establishedRoute.getFsIndexBegin() == -1) {
 										// Bloqueo
 										System.out.println("Insertando demanda Nro : " + demandaNumero + " en el tiempo t= "+ i +" ---------------------->"+ " Bloqueado");
@@ -170,40 +165,23 @@ public class SimulatorTest {
 									}
 								}
 								
-								if(i == 1000) {
-									System.out.println("Iniciado proceso de desfragmentación.... "+ i +": " + establishedRoutes.size());
-									createTableCaminosActivos();
-									for (EstablishedRoute caminoActivo : establishedRoutes) {
-										String nucleosUtilizados = "";
-										String indicesUtilizados = "";
-										Integer indicesFS = caminoActivo.getFsIndexBegin();
-										Integer tamanoFS = caminoActivo.getFsWidth();
-								
-										int cantidadEnlacesCamino = caminoActivo.getPath().size();
-										List<Integer> nucleosCamino = caminoActivo.getPathCores();
-										 Set<Integer> nucleosUnicos = new HashSet<>(nucleosCamino);
-									       
-										 for (Integer nucleo : nucleosCamino) {
-											 nucleosUtilizados = nucleosUtilizados + " - " + nucleo.toString(); 
-										} 
-										 for (int j = 0 ; j < tamanoFS;  j++) {
-											  Integer siguienteIndice = indicesFS + j ;
-											  indicesUtilizados = indicesUtilizados + " - " + siguienteIndice.toString();
-										 }
-										
-										insertDataCaminosActivos(topology.label(), algorithm.label(), caminoActivo.getFrom().toString(), caminoActivo.getTo().toString(),
-												cantidadEnlacesCamino, nucleosUnicos.size(), nucleosUtilizados, tamanoFS, indicesUtilizados, i );
-									}
-									
-									System.out.println("Caminos activos durante el intervalo de tiempo "+ i +": " + establishedRoutes.size());
-									System.out.println("Cantidad de demandas: " + (demandaNumero - 1));
+								// Proceso de Desfgragmentación
+								if(intervalosDeTiempoDF != null && i == intervalosDeTiempoDF && countDF <= input.getDefragmentationCount()) {
+									System.out.println("Iniciando proceso de Desfragmentación....: ");
+									Algorithms.inciarProcesoDesfragmentacion(establishedRoutes, graph, input.getCapacity());					
+									intervalosDeTiempoDF = i + intervalosDeTiempoDF;
+								    nDF = nDF +1;
 								}
+									
+										
+	
 								
 							}
 							System.out.println("Topología utilizada: " + topologiaUtilizada);
 							System.out.println("Erlangs : " + input.getErlang() );
 							System.out.println("TOTAL DE BLOQUEOS: " + bloqueos);
 							System.out.println("Cantidad de demandas: " + demandaNumero);
+							System.out.println("Cantidad de veces que se desfragmentó: " + nDF);
 							System.out.println(System.lineSeparator());
 						}
 					}
@@ -215,24 +193,16 @@ public class SimulatorTest {
 		}
 	}
 
-   
+
     public static void createTableBloqueos() {
         Connection c;
-
         Statement stmt;
-
         try {
-
             Class.forName("org.sqlite.JDBC");
-
             c = DriverManager.getConnection("jdbc:sqlite:simulador.db");
-
             System.out.println("Database Opened...\n");
-
             stmt = c.createStatement();
-
             String dropTable = "DROP TABLE Bloqueos ";
-
             String sql = "CREATE TABLE IF NOT EXISTS Bloqueos "
                     + "("
                     + "id INTEGER PRIMARY KEY AUTOINCREMENT, "  // se grega la columna "id"
@@ -258,62 +228,13 @@ public class SimulatorTest {
         }
     }
     
-    public static void createTableCaminosActivos() {
-        Connection c;
-        Statement stmt;
-
-        try {
-            Class.forName("org.sqlite.JDBC");
-            c = DriverManager.getConnection("jdbc:sqlite:simulador.db");
-            System.out.println("Database Opened...\n");
-            stmt = c.createStatement();
-
-            String dropTable = "DROP TABLE Caminos_Activos ";
-
-            String sql = "CREATE TABLE IF NOT EXISTS Caminos_Activos "
-                    + "("
-                    + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                    + "topologia TEXT NOT NULL, "
-                    + "rsa TEXT NOT NULL, "
-                    + "origen TEXT NOT NULL, "
-                    + "destino TEXT NOT NULL, "
-                    + "cantidad_enlaces INTEGER NOT NULL, "
-                    + "cantidad_nucleos INTEGER NOT NULL, "
-                    + "nucleos_utilizados TEXT NOT NULL, "
-                    + "cantidad_fs INTEGER NOT NULL, "
-                    + "fs_utilizados TEXT NOT NULL, "
-                    + "intervalo_tiempo TEXT NOT NULL, "
-                    + "fecha TEXT DEFAULT (strftime('%d/%m/%Y %H:%M', 'now', 'localtime'))"
-                    + ")";
-                    
-            try {
-                stmt.executeUpdate(dropTable);
-            } catch (SQLException ex) {
-                System.out.println(ex.getMessage());
-            }
-            
-            stmt.executeUpdate(sql);
-            stmt.close();
-            c.close();
-        } catch (ClassNotFoundException | SQLException e) {
-            System.out.println(e.getClass().getName() + ": " + e.getMessage());
-            System.exit(0);
-        }
-    }
-    
     public static void insertDataBloqueo(String rsa, String topologia, String tiempo, String demanda, String erlang, String h) {
         Connection c;
-
         Statement stmt;
-
         try {
-
             Class.forName("org.sqlite.JDBC");
-
             c = DriverManager.getConnection("jdbc:sqlite:simulador.db");
-
             c.setAutoCommit(false);
-
             stmt = c.createStatement();
             String sql = "INSERT INTO Bloqueos (rsa, topologia, tiempo, demanda, erlang, h) "
                     + "VALUES ('" + rsa + "','" + topologia + "', '" + tiempo + "' ,'" + demanda + "', " + "'" + erlang + "', " + "'" + h + "')";
@@ -326,32 +247,5 @@ public class SimulatorTest {
             System.exit(0);
         }
     }
-
-
     
-    public static void insertDataCaminosActivos(String topologia, String rsa, String origen,
-            String destino, int cantidadEnlaces, int cantidadNucleos, String nucleosUtilizados, int cantidadFS, String fsUtilizados, int intervaloTiempo) {
-        Connection c;
-        Statement stmt;
-
-        try {
-            Class.forName("org.sqlite.JDBC");
-            c = DriverManager.getConnection("jdbc:sqlite:simulador.db");
-            c.setAutoCommit(false);
-            stmt = c.createStatement();
-            String sql = "INSERT INTO Caminos_Activos (topologia, rsa, origen, destino, cantidad_enlaces, cantidad_nucleos, nucleos_utilizados, cantidad_fs, fs_utilizados, intervalo_tiempo) "
-                    + "VALUES ('" + topologia + "','" + rsa + "', '" + origen + "', '" + destino + "', '"
-                    + cantidadEnlaces + "', '" + cantidadNucleos + "', '" + nucleosUtilizados + "', '" + cantidadFS + "', '" + fsUtilizados + "', " + intervaloTiempo + ")";
-            
-            stmt.executeUpdate(sql);
-            stmt.close();
-            c.commit();
-            c.close();
-        } catch (ClassNotFoundException | SQLException e) {
-            System.out.println(e.getClass().getName() + ": " + e.getMessage());
-            System.exit(0);
-        }
-    }
-    
-   
 }
