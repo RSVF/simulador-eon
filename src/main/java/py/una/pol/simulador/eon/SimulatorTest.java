@@ -168,7 +168,15 @@ public class SimulatorTest {
 								// Proceso de Desfgragmentación
 								if(intervalosDeTiempoDF != null && i == intervalosDeTiempoDF && countDF <= input.getDefragmentationCount()) {
 									System.out.println("Iniciando proceso de Desfragmentación....: ");
-									Algorithms.inciarProcesoDesfragmentacion(establishedRoutes, graph, input.getCapacity());					
+									
+									// Cálculo del BFR antes de la desfgragmentación
+									Double bfrRed = Algorithms.bfrRed(graph, input.getCapacity(), input.getCores());
+									System.out.println("El BFR de la red antes de la desfragmentación es :"+ bfrRed);
+									Algorithms.inciarProcesoDesfragmentacion(establishedRoutes, graph, input.getCapacity());
+									
+									// Cálculo del BFR luego de la desfgragmentación
+									bfrRed = Algorithms.bfrRed(graph, input.getCapacity(), input.getCores());
+									System.out.println("El BFR de la red luego de la desfragmentación es :"+ bfrRed);
 									intervalosDeTiempoDF = i + intervalosDeTiempoDF;
 								    nDF = nDF +1;
 								}

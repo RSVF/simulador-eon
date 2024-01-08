@@ -3,9 +3,13 @@ package py.una.pol.simulador.eon.rsa;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.KShortestSimplePaths;
+
+import py.una.pol.simulador.eon.models.Core;
 import py.una.pol.simulador.eon.models.Demand;
 import py.una.pol.simulador.eon.models.EstablishedRoute;
 import py.una.pol.simulador.eon.models.FrequencySlot;
@@ -169,14 +173,13 @@ public class Algorithms {
 		 // Se recorre todas las rutas activas, por cada ruta activa se calcula el BFR y se guarda en el objeto
 		 for (int ra = 0; ra < listaRutasActivas.size(); ra++) {
 				EstablishedRoute rutaActiva = listaRutasActivas.get(ra);
-				Double bfrRuta = calcularBfrRuta (rutaActiva, red, capacidadEnlace);
+				Double bfrRuta = bfrRutaActiva (rutaActiva, red, capacidadEnlace);
 				rutaActiva.setBfrRuta(bfrRuta);
 			}
-	           
 	 }
 	 
 	 
-		public static Double calcularBfrRuta(EstablishedRoute ruta, Graph<Integer, Link> red, Integer capacidadEnlace) {
+		public static Double bfrRutaActiva(EstablishedRoute ruta, Graph<Integer, Link> red, Integer capacidadEnlace) {
 			// BFRenlace = 1 - maxBloqLibre / (N - cantFSocupados))
 			Double sumBfr = 0.0;
 			for (int iEnlace = 0; iEnlace < ruta.getPath().size(); iEnlace++) {
@@ -198,11 +201,50 @@ public class Algorithms {
 						auxBloqLibre = auxBloqLibre + 1;
 					}
 				}
-				bfrEnlace = 1.0 - ((double) maxBloqLibre / (capacidadEnlace - cantFSocupados));
-
-				sumBfr = sumBfr + bfrEnlace;
+				// se aplica la formula para calcular el BFR en un enlace
+				bfrEnlace = 1.0 - ((double) maxBloqLibre / (capacidadEnlace - cantFSocupados)); 
+				// se va sumando los BFR de cada enlace para posteriormente hallar el promedio según la formula
+				sumBfr = sumBfr + bfrEnlace; 
 			}
+			// se halla el BFRruta 
 			Double BFRruta = sumBfr / ruta.getPath().size();
 			return BFRruta;
 		}
+		
+		
+		public static Double bfrRed(Graph<Integer, Link> red, Integer capacidadEnlace, Integer core) {
+			List<Link> listaEnlaces = new ArrayList<>(red.edgeSet());
+			Double sumBfr = 0.0;
+			for (Link enlace : listaEnlaces) {
+				for (int c = 0; c < core; c++) {
+					Double bfrEnlace = 0.0;
+					Integer cantFSocupados = 0;
+					Integer auxBloqLibre = 0;
+					Integer maxBloqLibre = 0;
+
+					for (int iFs = 0; iFs < capacidadEnlace; iFs++) {
+						Boolean ranuraFS = enlace.getCores().get(c).getFrequencySlots().get(iFs).isFree();
+						if (ranuraFS) {
+							// Si encontramos un elemento ocupado, actualizamos el máximo bloque libre
+							maxBloqLibre = Math.max(maxBloqLibre, auxBloqLibre);
+							auxBloqLibre = 0;
+							cantFSocupados = cantFSocupados + 1;
+						} else {
+							auxBloqLibre = auxBloqLibre + 1;
+						}
+					}
+					// se aplica la formula para calcular el BFR en un enlace
+					bfrEnlace = 1.0 - ((double) maxBloqLibre / (capacidadEnlace - cantFSocupados));
+					// se va sumando los BFR de cada enlace para posteriormente hallar el promedio
+					// según la formula
+					sumBfr = sumBfr + bfrEnlace;
+				}
+			}
+			
+			Double bfrRed = sumBfr / (listaEnlaces.size() * core);
+			return bfrRed;
+
+		}
+
+		
 }
