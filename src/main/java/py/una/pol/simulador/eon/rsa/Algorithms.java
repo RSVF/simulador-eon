@@ -2,14 +2,14 @@ package py.una.pol.simulador.eon.rsa;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Set;
 
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.KShortestSimplePaths;
 
-import py.una.pol.simulador.eon.models.Core;
 import py.una.pol.simulador.eon.models.Demand;
 import py.una.pol.simulador.eon.models.EstablishedRoute;
 import py.una.pol.simulador.eon.models.FrequencySlot;
@@ -169,13 +169,30 @@ public class Algorithms {
 		return true;
 	}
 	
-	 public static void inciarProcesoDesfragmentacion(List<EstablishedRoute> listaRutasActivas, Graph<Integer, Link> red, Integer capacidadEnlace) {
+	 public static void inciarProcesoDesfragmentacion(List<EstablishedRoute> listaRutasActivas, Graph<Integer, Link> red, Integer capacidadEnlace,
+			 Double crosstalkPerUnitLength) {
 		 // Se recorre todas las rutas activas, por cada ruta activa se calcula el BFR y se guarda en el objeto
 		 for (int ra = 0; ra < listaRutasActivas.size(); ra++) {
 				EstablishedRoute rutaActiva = listaRutasActivas.get(ra);
 				Double bfrRuta = bfrRutaActiva (rutaActiva, red, capacidadEnlace);
 				rutaActiva.setBfrRuta(bfrRuta);
 			}
+		 // Ordenar la lista de rutas activas por BFR de forma descendente
+		 ordenarRutasPorBfrDesc(listaRutasActivas);		
+		 
+		 List<EstablishedRoute> sublista = obtenerPeoresRutasActivas(listaRutasActivas);
+		
+		 // Ordenar la subLista de rutas activas por FS de forma descendente
+	     ordenarRutasPorFsDesc(sublista);  
+	     
+	     //Desasignar FS de la red para toda esa sublista
+	     desinstalarRutas(sublista, red, crosstalkPerUnitLength);
+	     
+	     //Se genera una lista de demandas apartir de la subLista, para luego volver a rerutear
+	     List<Demand> listaDemandasR = generarDemandas(sublista);
+	     
+	     System.out.println("El BFR de la red luego de la desfragmentación es :"+ listaDemandasR.size());
+		 
 	 }
 	 
 	 
@@ -184,14 +201,16 @@ public class Algorithms {
 			Double sumBfr = 0.0;
 			for (int iEnlace = 0; iEnlace < ruta.getPath().size(); iEnlace++) {
 				// Por cada enlace se inicializa las variables
-				Double bfrEnlace = null;
+				Double bfrEnlace = 0.0;
 				Integer cantFSocupados = 0;
 				Integer auxBloqLibre = 0;
 				Integer maxBloqLibre = 0;
 
 				for (int indiceFs = 0; indiceFs < capacidadEnlace; indiceFs++) {
+					
 					Boolean ranuraFS = ruta.getPath().get(iEnlace).getCores().get(ruta.getPathCores().get(iEnlace))
 							.getFrequencySlots().get(indiceFs).isFree();
+					
 					if (ranuraFS) {
 						// Si encontramos un elemento ocupado, actualizamos el máximo bloque libre
 						maxBloqLibre = Math.max(maxBloqLibre, auxBloqLibre);
@@ -212,39 +231,86 @@ public class Algorithms {
 		}
 		
 		
-		public static Double bfrRed(Graph<Integer, Link> red, Integer capacidadEnlace, Integer core) {
-			List<Link> listaEnlaces = new ArrayList<>(red.edgeSet());
-			Double sumBfr = 0.0;
-			for (Link enlace : listaEnlaces) {
-				for (int c = 0; c < core; c++) {
-					Double bfrEnlace = 0.0;
-					Integer cantFSocupados = 0;
-					Integer auxBloqLibre = 0;
-					Integer maxBloqLibre = 0;
+	public static Double bfrRed(Graph<Integer, Link> red, Integer capacidadEnlace, Integer core) {
+		List<Link> listaEnlaces = new ArrayList<>(red.edgeSet());
+		Double sumBfrEnlaceCore = 0.0;
 
-					for (int iFs = 0; iFs < capacidadEnlace; iFs++) {
-						Boolean ranuraFS = enlace.getCores().get(c).getFrequencySlots().get(iFs).isFree();
-						if (ranuraFS) {
-							// Si encontramos un elemento ocupado, actualizamos el máximo bloque libre
-							maxBloqLibre = Math.max(maxBloqLibre, auxBloqLibre);
-							auxBloqLibre = 0;
-							cantFSocupados = cantFSocupados + 1;
-						} else {
-							auxBloqLibre = auxBloqLibre + 1;
-						}
+		for (Link enlace : listaEnlaces) {
+			Double sumBfrEnlace = 0.0;
+
+			for (int c = 0; c < core; c++) {
+				Double bfrEnlace = 0.0;
+				Integer cantFSocupados = 0;
+				Integer auxBloqLibre = 0;
+				Integer maxBloqLibre = 0;
+
+				for (int iFs = 0; iFs < capacidadEnlace; iFs++) {
+					Boolean ranuraFS = enlace.getCores().get(c).getFrequencySlots().get(iFs).isFree();
+					if (ranuraFS) {
+						maxBloqLibre = Math.max(maxBloqLibre, auxBloqLibre);
+						auxBloqLibre = 0;
+						cantFSocupados++;
+					} else {
+						auxBloqLibre++;
 					}
-					// se aplica la formula para calcular el BFR en un enlace
-					bfrEnlace = 1.0 - ((double) maxBloqLibre / (capacidadEnlace - cantFSocupados));
-					// se va sumando los BFR de cada enlace para posteriormente hallar el promedio
-					// según la formula
-					sumBfr = sumBfr + bfrEnlace;
 				}
+				if (capacidadEnlace - cantFSocupados != 0) {
+					bfrEnlace = 1.0 - ((double) maxBloqLibre / (capacidadEnlace - cantFSocupados));
+				}
+				sumBfrEnlace += bfrEnlace;
 			}
-			
-			Double bfrRed = sumBfr / (listaEnlaces.size() * core);
-			return bfrRed;
+			sumBfrEnlaceCore += sumBfrEnlace;
+		}
+		// Verifica que no haya división por cero antes de calcular el promedio
+		Double bfrRed = (listaEnlaces.size() * core > 0) ? sumBfrEnlaceCore / (listaEnlaces.size() * core) : 0.0;
+		return bfrRed;
+	}
 
+		
+		public static void ordenarRutasPorBfrDesc(List<EstablishedRoute> listaRutasActivas){
+			Collections.sort(listaRutasActivas, Comparator.comparingDouble(EstablishedRoute::getBfrRuta).reversed());
+		}		
+		 
+		
+		public static List<EstablishedRoute> obtenerPeoresRutasActivas(List<EstablishedRoute> listaRutasActivas) {
+		    // Calcular el 30% de rutas activas
+		    int tamañoSubLista = (int) (listaRutasActivas.size() * 0.3);
+		    // Obtener sublista con el 30% de las rutas activas
+		    List<EstablishedRoute> sublista = new ArrayList<>(listaRutasActivas.subList(0, tamañoSubLista));
+
+		    // Eliminar el 30% de las rutas activas de la lista principal
+		    listaRutasActivas.removeAll(sublista);
+
+		    return sublista;
 		}
 
+		
+		public static void ordenarRutasPorFsDesc(List<EstablishedRoute> listaRutasActivas){
+			Collections.sort(listaRutasActivas, Comparator.comparingInt(EstablishedRoute::getFsWidth).reversed());
+		}	
+		
+		public static void desinstalarRutas(List<EstablishedRoute> subListaRutasLiberar, Graph<Integer, Link> red,
+				Double crosstalkPerUnitLength){
+			
+			for (int rl = 0; rl < subListaRutasLiberar.size(); rl++) {
+				EstablishedRoute route = subListaRutasLiberar.get(rl);
+					Utils.deallocateFs(red, route, crosstalkPerUnitLength);
+			}
+		}
+		
+		public static List<Demand> generarDemandas(List<EstablishedRoute> listaRutasReRuteo) {
+			List<Demand> listaDemandas = new ArrayList<>();
+			for (int rr = 0; rr < listaRutasReRuteo.size(); rr++) {
+				EstablishedRoute r = listaRutasReRuteo.get(rr);
+				Demand demanda = new Demand(null, r.getFrom(), r.getTo(), r.getFsWidth(), r.getLifetime(), null, null);
+				// Agrega la demanda a la lista
+				listaDemandas.add(demanda);
+			}
+
+			// Devuelve la lista de demandas generadas
+			return listaDemandas;
+
+		}
+		
 		
 }

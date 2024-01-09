@@ -52,7 +52,7 @@ public class SimulatorTest {
 		input.setLambda(5);
 		
 		// Volumen del tráfico promedio en cada instante de tiempo
-		input.setErlang(2000);
+		input.setErlang(5000);
 		
 		// Algoritmos RSA
 		input.setAlgorithms(new ArrayList<>());
@@ -172,11 +172,13 @@ public class SimulatorTest {
 									// Cálculo del BFR antes de la desfgragmentación
 									Double bfrRed = Algorithms.bfrRed(graph, input.getCapacity(), input.getCores());
 									System.out.println("El BFR de la red antes de la desfragmentación es :"+ bfrRed);
-									Algorithms.inciarProcesoDesfragmentacion(establishedRoutes, graph, input.getCapacity());
-									
+									System.out.println("Rutas activas :"+ establishedRoutes.size());
+									Algorithms.inciarProcesoDesfragmentacion(establishedRoutes, graph, input.getCapacity(), crosstalkPerUnitLength);
+										
 									// Cálculo del BFR luego de la desfgragmentación
 									bfrRed = Algorithms.bfrRed(graph, input.getCapacity(), input.getCores());
 									System.out.println("El BFR de la red luego de la desfragmentación es :"+ bfrRed);
+									System.out.println("Rutas activas :"+ establishedRoutes.size());
 									intervalosDeTiempoDF = i + intervalosDeTiempoDF;
 								    nDF = nDF +1;
 								}
