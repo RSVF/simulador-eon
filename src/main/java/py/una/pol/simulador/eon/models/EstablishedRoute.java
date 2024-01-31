@@ -1,6 +1,9 @@
 package py.una.pol.simulador.eon.models;
 
 import java.util.List;
+
+import org.jgrapht.GraphPath;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -46,9 +49,12 @@ public class EstablishedRoute {
      * BFR de la ruta
      */
     private Double bfrRuta;
+    
+    GraphPath<Integer, Link> dijkstra;
     /**
      * Constructor vacío
      */
+  
     public EstablishedRoute() {
     }
 
@@ -64,7 +70,8 @@ public class EstablishedRoute {
      * @param pathCores Núcleos a los que pertenecen los enlaces de la lista
      * path
      */
-    public EstablishedRoute(List<Link> path, Integer fsIndexBegin, Integer fsWidth, Integer lifetime, Integer from, Integer to, List<Integer> pathCores, Double bfrRuta) {
+    public EstablishedRoute(List<Link> path, Integer fsIndexBegin, Integer fsWidth, Integer lifetime, Integer from, Integer to, List<Integer> pathCores, 
+    		Double bfrRuta, GraphPath<Integer, Link> dijkstra) {
         this.path = path;
         this.fsIndexBegin = fsIndexBegin;
         this.fsWidth = fsWidth;
@@ -73,6 +80,7 @@ public class EstablishedRoute {
         this.to = to;
         this.pathCores = pathCores;
         this.bfrRuta = bfrRuta;
+        this.dijkstra = dijkstra;
     }
 
     /**

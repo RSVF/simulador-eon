@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
+import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 import org.jgrapht.alg.shortestpath.KShortestSimplePaths;
 
 import py.una.pol.simulador.eon.models.Demand;
@@ -115,7 +116,7 @@ public class Algorithms {
 		EstablishedRoute establisedRoute;
 		if (fsIndexBegin != null && !kspPlaced.isEmpty()) {
 			establisedRoute = new EstablishedRoute(kspPlaced.get(0).getEdgeList(), fsIndexBegin, demand.getFs(),
-					demand.getLifetime(), demand.getSource(), demand.getDestination(), kspPlacedCores.get(0), null);
+					demand.getLifetime(), demand.getSource(), demand.getDestination(), kspPlacedCores.get(0), null, null);
 		} else {
 			// System.out.println("Bloqueo");
 			establisedRoute = null;
@@ -180,18 +181,37 @@ public class Algorithms {
 		 // Ordenar la lista de rutas activas por BFR de forma descendente
 		 ordenarRutasPorBfrDesc(listaRutasActivas);		
 		 
-		 List<EstablishedRoute> sublista = obtenerPeoresRutasActivas(listaRutasActivas);
+		 List<EstablishedRoute> sublista = obtenerPeoresRutasActivas(listaRutasActivas); // Obtiene el 30% de peores rutas
 		
 		 // Ordenar la subLista de rutas activas por FS de forma descendente
-	     ordenarRutasPorFsDesc(sublista);  
+	     ordenarRutasPorFsDesc(sublista);
+	     
+	     calcularDijstra(sublista, red);
+	     
+	  // Crear un comparador compuesto
+	     EstablishedRouteComparator comparator = new EstablishedRouteComparator();
+
+	     // Ordenar la subLista de rutas activas por el comparador compuesto
+	     sublista.sort(comparator);
+	     
+	     int a = 1;
+	     
+	     
+	     
+	     
+	     
+	     
+	     
+	     
+	     
 	     
 	     //Desasignar FS de la red para toda esa sublista
-	     desinstalarRutas(sublista, red, crosstalkPerUnitLength);
+	     //desinstalarRutas(sublista, red, crosstalkPerUnitLength);
 	     
 	     //Se genera una lista de demandas apartir de la subLista, para luego volver a rerutear
-	     List<Demand> listaDemandasR = generarDemandas(sublista);
+	     //List<Demand> listaDemandasR = generarDemandas(sublista);
 	     
-	     System.out.println("El BFR de la red luego de la desfragmentación es :"+ listaDemandasR.size());
+	    // System.out.println("El BFR de la red luego de la desfragmentación es :"+ listaDemandasR.size());
 		 
 	 }
 	 
@@ -279,7 +299,7 @@ public class Algorithms {
 		    List<EstablishedRoute> sublista = new ArrayList<>(listaRutasActivas.subList(0, tamañoSubLista));
 
 		    // Eliminar el 30% de las rutas activas de la lista principal
-		    listaRutasActivas.removeAll(sublista);
+		    //listaRutasActivas.removeAll(sublista);
 
 		    return sublista;
 		}
@@ -311,6 +331,16 @@ public class Algorithms {
 			return listaDemandas;
 
 		}
+		
+		public static void calcularDijstra(List<EstablishedRoute> subLista, Graph<Integer, Link> red){
+			DijkstraShortestPath<Integer, Link> dijkstraFinder = new DijkstraShortestPath<>(red);
+			for (int rr = 0; rr < subLista.size(); rr++) {
+				EstablishedRoute r = subLista.get(rr);
+				GraphPath<Integer, Link> dijstraPaths = dijkstraFinder.getPath(r.getFrom(), r.getTo());
+				r.setDijkstra(dijstraPaths);
+			}	
+		}
+		
 		
 		
 }
