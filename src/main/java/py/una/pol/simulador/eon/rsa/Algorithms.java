@@ -11,6 +11,7 @@ import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 import org.jgrapht.alg.shortestpath.KShortestSimplePaths;
 
+import py.una.pol.simulador.eon.models.AssignFsResponse;
 import py.una.pol.simulador.eon.models.Demand;
 import py.una.pol.simulador.eon.models.EstablishedRoute;
 import py.una.pol.simulador.eon.models.FrequencySlot;
@@ -170,8 +171,9 @@ public class Algorithms {
 		return true;
 	}
 	
-	 public static void inciarProcesoDesfragmentacion(List<EstablishedRoute> listaRutasActivas, Graph<Integer, Link> red, Integer capacidadEnlace,
-			 Double crosstalkPerUnitLength) {
+	 public static void inciarProcesoDesfragmentacion(List<EstablishedRoute> listaRutasActivas, Graph<Integer, Link> red, 
+			 Integer capacidadEnlace, BigDecimal maxCrosstalk, Double crosstalkPerUnitLength) {
+		 
 		 // Se recorre todas las rutas activas, por cada ruta activa se calcula el BFR y se guarda en el objeto
 		 for (int ra = 0; ra < listaRutasActivas.size(); ra++) {
 				EstablishedRoute rutaActiva = listaRutasActivas.get(ra);
@@ -191,27 +193,17 @@ public class Algorithms {
 	  // Crear un comparador compuesto
 	     EstablishedRouteComparator comparator = new EstablishedRouteComparator();
 
-	     // Ordenar la subLista de rutas activas por el comparador compuesto
+	  // Ordenar la subLista de rutas activas por el comparador compuesto
 	     sublista.sort(comparator);
 	     
-	     int a = 1;
-	     
-	     
-	     
-	     
-	     
-	     
-	     
-	     
-	     
-	     
+	       
 	     //Desasignar FS de la red para toda esa sublista
-	     //desinstalarRutas(sublista, red, crosstalkPerUnitLength);
+	     desinstalarRutas(sublista,listaRutasActivas, red, crosstalkPerUnitLength);
 	     
 	     //Se genera una lista de demandas apartir de la subLista, para luego volver a rerutear
-	     //List<Demand> listaDemandasR = generarDemandas(sublista);
+	     List<Demand> listaDemandasR = generarDemandas(sublista);
 	     
-	    // System.out.println("El BFR de la red luego de la desfragmentación es :"+ listaDemandasR.size());
+	     reProcesarDemandas(listaDemandasR, red, capacidadEnlace, maxCrosstalk, crosstalkPerUnitLength, 7, listaRutasActivas);
 		 
 	 }
 	 
@@ -309,12 +301,13 @@ public class Algorithms {
 			Collections.sort(listaRutasActivas, Comparator.comparingInt(EstablishedRoute::getFsWidth).reversed());
 		}	
 		
-		public static void desinstalarRutas(List<EstablishedRoute> subListaRutasLiberar, Graph<Integer, Link> red,
+		public static void desinstalarRutas(List<EstablishedRoute> subListaRutasLiberar, List<EstablishedRoute> listaRutasActivas, Graph<Integer, Link> red,
 				Double crosstalkPerUnitLength){
 			
 			for (int rl = 0; rl < subListaRutasLiberar.size(); rl++) {
 				EstablishedRoute route = subListaRutasLiberar.get(rl);
 					Utils.deallocateFs(red, route, crosstalkPerUnitLength);
+					listaRutasActivas.remove(rl);
 			}
 		}
 		
@@ -322,7 +315,7 @@ public class Algorithms {
 			List<Demand> listaDemandas = new ArrayList<>();
 			for (int rr = 0; rr < listaRutasReRuteo.size(); rr++) {
 				EstablishedRoute r = listaRutasReRuteo.get(rr);
-				Demand demanda = new Demand(null, r.getFrom(), r.getTo(), r.getFsWidth(), r.getLifetime(), null, null);
+				Demand demanda = new Demand(rr, r.getFrom(), r.getTo(), r.getFsWidth(), r.getLifetime(), null, null);
 				// Agrega la demanda a la lista
 				listaDemandas.add(demanda);
 			}
@@ -341,6 +334,36 @@ public class Algorithms {
 			}	
 		}
 		
+		public static void reProcesarDemandas(List<Demand> demandas, Graph<Integer, Link> red, 
+				Integer capacidadEnlance, BigDecimal maxCrosstalk, Double crosstalkPerUnitLength, Integer cores, 
+				List<EstablishedRoute> listasRutasActivas){
+			List<EstablishedRoute> listaRutasEstablecidas = new ArrayList<>();
+			int bloqueos = 0;
+			for (Demand demand : demandas) {
+				EstablishedRoute rutasEstablecida;
+				// Algoritmo RSA con conmutación de nucleos
+				rutasEstablecida = Algorithms.ruteoCoreMultiple(red, demand, capacidadEnlance,
+							cores, maxCrosstalk, crosstalkPerUnitLength);
+				
+				if (rutasEstablecida == null || rutasEstablecida.getFsIndexBegin() == -1) {
+					// Bloqueo
+					demand.setBlocked(true);
+					bloqueos++;
+					
+				} else {
+					// Ruta establecida
+					AssignFsResponse response = Utils.assignFs(red, rutasEstablecida, crosstalkPerUnitLength);
+					rutasEstablecida = response.getRoute();
+					red = response.getGraph();
+					listasRutasActivas.add(rutasEstablecida);
+				}
+		}
+			System.out.println("Cantidad de Bloqueos luego de reruteo es: "+ bloqueos);
+		}
+		    
+}			
 		
 		
-}
+			
+		
+
