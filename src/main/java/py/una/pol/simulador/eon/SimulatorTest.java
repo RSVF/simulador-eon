@@ -52,7 +52,7 @@ public class SimulatorTest {
 		input.setLambda(5);
 		
 		// Volumen del tráfico promedio en cada instante de tiempo
-		input.setErlang(2000);
+		input.setErlang(3000);
 		
 		// Algoritmos RSA
 		input.setAlgorithms(new ArrayList<>());
@@ -73,7 +73,7 @@ public class SimulatorTest {
 		input.getCrosstalkPerUnitLenghtList().add((2 * Math.pow(0.0000316, 2) * 0.055) / (4000000 * 0.000045));  // h= 6,102E-13
 		
 		//Cantidad de veces que se va a realizar la desfragmentación
-		input.setDefragmentationCount(2);
+		input.setDefragmentationCount(1);
 		return input;
 	}
 

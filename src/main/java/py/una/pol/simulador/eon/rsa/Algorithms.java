@@ -196,10 +196,12 @@ public class Algorithms {
 	  // Ordenar la subLista de rutas activas por el comparador compuesto
 	     sublista.sort(comparator);
 	     
-	       
+	     List<EstablishedRoute> quitarDemandas = sublista;
 	     //Desasignar FS de la red para toda esa sublista
-	     desinstalarRutas(sublista,listaRutasActivas, red, crosstalkPerUnitLength);
+	     desinstalarRutas(quitarDemandas,listaRutasActivas, red, crosstalkPerUnitLength);
 	     
+	     Double bfrRed = Algorithms.bfrRed(red, capacidadEnlace, 7);
+	     System.out.println("El BFR de la red luego de la desfragmentación es :"+ bfrRed);
 	     //Se genera una lista de demandas apartir de la subLista, para luego volver a rerutear
 	     List<Demand> listaDemandasR = generarDemandas(sublista);
 	     
@@ -307,7 +309,8 @@ public class Algorithms {
 			for (int rl = 0; rl < subListaRutasLiberar.size(); rl++) {
 				EstablishedRoute route = subListaRutasLiberar.get(rl);
 					Utils.deallocateFs(red, route, crosstalkPerUnitLength);
-					listaRutasActivas.remove(rl);
+					subListaRutasLiberar.remove(rl);
+					rl--;
 			}
 		}
 		
