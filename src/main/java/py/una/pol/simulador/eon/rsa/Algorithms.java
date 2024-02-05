@@ -173,7 +173,7 @@ public class Algorithms {
 	
 	 public static void inciarProcesoDesfragmentacion(List<EstablishedRoute> listaRutasActivas, Graph<Integer, Link> red, 
 			 Integer capacidadEnlace, BigDecimal maxCrosstalk, Double crosstalkPerUnitLength) {
-		 
+
 		 // Se recorre todas las rutas activas, por cada ruta activa se calcula el BFR y se guarda en el objeto
 		 for (int ra = 0; ra < listaRutasActivas.size(); ra++) {
 				EstablishedRoute rutaActiva = listaRutasActivas.get(ra);
@@ -184,7 +184,12 @@ public class Algorithms {
 		 ordenarRutasPorBfrDesc(listaRutasActivas);		
 		 
 		 List<EstablishedRoute> sublista = obtenerPeoresRutasActivas(listaRutasActivas); // Obtiene el 30% de peores rutas
-		
+
+		 /*int eliminado = 0;
+		 while (eliminado < sublista.size()) {
+			 listaRutasActivas.remove(0);
+			 eliminado++;
+		 }*/
 		 // Ordenar la subLista de rutas activas por FS de forma descendente
 	     ordenarRutasPorFsDesc(sublista);
 	     
@@ -195,13 +200,12 @@ public class Algorithms {
 
 	  // Ordenar la subLista de rutas activas por el comparador compuesto
 	     sublista.sort(comparator);
-	     
-	     List<EstablishedRoute> quitarDemandas = sublista;
+
 	     //Desasignar FS de la red para toda esa sublista
-	     desinstalarRutas(quitarDemandas,listaRutasActivas, red, crosstalkPerUnitLength);
+	     desinstalarRutas(sublista,listaRutasActivas, red, crosstalkPerUnitLength);
 	     
 	     Double bfrRed = Algorithms.bfrRed(red, capacidadEnlace, 7);
-	     System.out.println("El BFR de la red luego de la desfragmentación es :"+ bfrRed);
+	     System.out.println("El BFR de la red luego de desasignar  es :"+ bfrRed);
 	     //Se genera una lista de demandas apartir de la subLista, para luego volver a rerutear
 	     List<Demand> listaDemandasR = generarDemandas(sublista);
 	     
@@ -293,7 +297,7 @@ public class Algorithms {
 		    List<EstablishedRoute> sublista = new ArrayList<>(listaRutasActivas.subList(0, tamañoSubLista));
 
 		    // Eliminar el 30% de las rutas activas de la lista principal
-		    //listaRutasActivas.removeAll(sublista);
+		     //listaRutasActivas.removeAll(sublista);
 
 		    return sublista;
 		}
@@ -309,8 +313,7 @@ public class Algorithms {
 			for (int rl = 0; rl < subListaRutasLiberar.size(); rl++) {
 				EstablishedRoute route = subListaRutasLiberar.get(rl);
 					Utils.deallocateFs(red, route, crosstalkPerUnitLength);
-					subListaRutasLiberar.remove(rl);
-					rl--;
+
 			}
 		}
 		
@@ -342,6 +345,7 @@ public class Algorithms {
 				List<EstablishedRoute> listasRutasActivas){
 			List<EstablishedRoute> listaRutasEstablecidas = new ArrayList<>();
 			int bloqueos = 0;
+			int asigancion = 0;
 			for (Demand demand : demandas) {
 				EstablishedRoute rutasEstablecida;
 				// Algoritmo RSA con conmutación de nucleos
@@ -359,6 +363,7 @@ public class Algorithms {
 					rutasEstablecida = response.getRoute();
 					red = response.getGraph();
 					listasRutasActivas.add(rutasEstablecida);
+					asigancion++;
 				}
 		}
 			System.out.println("Cantidad de Bloqueos luego de reruteo es: "+ bloqueos);

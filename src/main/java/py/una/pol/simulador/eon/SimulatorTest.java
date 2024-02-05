@@ -73,7 +73,7 @@ public class SimulatorTest {
 		input.getCrosstalkPerUnitLenghtList().add((2 * Math.pow(0.0000316, 2) * 0.055) / (4000000 * 0.000045));  // h= 6,102E-13
 		
 		//Cantidad de veces que se va a realizar la desfragmentación
-		input.setDefragmentationCount(1);
+		input.setDefragmentationCount(0);
 		return input;
 	}
 
@@ -122,8 +122,11 @@ public class SimulatorTest {
 							int demandaNumero = 1;
 							int bloqueos = 0;
 							// Iteración de intervalos de tiempo de la simulacion
+
+
+
 							for (int i = 0; i < intervalosDeTiempoRSA; i++) {
-								
+
 								//  Demandas a ser transmitidas en el intervalo de tiempo i
 								List<Demand> demands = listaDemandas.get(i);
 								for (Demand demand : demands) {
@@ -132,7 +135,7 @@ public class SimulatorTest {
 									// Algoritmo RSA con conmutación de nucleos
 									establishedRoute = Algorithms.ruteoCoreMultiple(graph, demand, input.getCapacity(),
 												input.getCores(), input.getMaxCrosstalk(), crosstalkPerUnitLength);
-									
+
 									if (establishedRoute == null || establishedRoute.getFsIndexBegin() == -1) {
 										// Bloqueo
 										System.out.println("Insertando demanda Nro : " + demandaNumero + " en el tiempo t= "+ i +" ---------------------->"+ " Bloqueado");
@@ -164,17 +167,17 @@ public class SimulatorTest {
 										ri--;
 									}
 								}
-								
+
 								// Proceso de Desfgragmentación
 								if(intervalosDeTiempoDF != null && i == intervalosDeTiempoDF && countDF <= input.getDefragmentationCount()) {
 									System.out.println("Iniciando proceso de Desfragmentación....: ");
-									
+
 									// Cálculo del BFR antes de la desfgragmentación
 									Double bfrRed = Algorithms.bfrRed(graph, input.getCapacity(), input.getCores());
 									System.out.println("El BFR de la red antes de la desfragmentación es :"+ bfrRed);
 									System.out.println("Rutas activas :"+ establishedRoutes.size());
 									Algorithms.inciarProcesoDesfragmentacion(establishedRoutes, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength);
-										
+
 									// Cálculo del BFR luego de la desfgragmentación
 									bfrRed = Algorithms.bfrRed(graph, input.getCapacity(), input.getCores());
 									System.out.println("El BFR de la red luego de la desfragmentación es :"+ bfrRed);
@@ -182,10 +185,10 @@ public class SimulatorTest {
 									intervalosDeTiempoDF = i + intervalosDeTiempoDF;
 								    nDF = nDF +1;
 								}
-									
-										
-	
-								
+
+
+
+
 							}
 							System.out.println("Topología utilizada: " + topologiaUtilizada);
 							System.out.println("Erlangs : " + input.getErlang() );
