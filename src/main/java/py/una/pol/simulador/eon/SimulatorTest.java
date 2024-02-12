@@ -73,7 +73,7 @@ public class SimulatorTest {
 		input.getCrosstalkPerUnitLenghtList().add((2 * Math.pow(0.0000316, 2) * 0.055) / (4000000 * 0.000045));  // h= 6,102E-13
 		
 		//Cantidad de veces que se va a realizar la desfragmentación
-		input.setDefragmentationCount(0);
+		input.setDefragmentationCount(1);
 		return input;
 	}
 
@@ -86,6 +86,7 @@ public class SimulatorTest {
 			Input input = new SimulatorTest().getTestingInput();
 			Graph<Integer, Link> graph = null;
 			Integer intervalosDeTiempoDF = null;
+			Integer desfragmentar = null;
 			Integer countDF = null;
 			Integer nDF = 0;
 			String topologiaUtilizada = Constants.SIMULADOR_TOPOLOGIA_NSFNET;
@@ -93,7 +94,7 @@ public class SimulatorTest {
 			
 			if(input.getDefragmentationCount() != null && input.getDefragmentationCount() != 0) {
 				 intervalosDeTiempoDF = (int) Math.round(intervalosDeTiempoRSA / (input.getDefragmentationCount() + 1.0));
-				 countDF = 0;
+				 desfragmentar = intervalosDeTiempoDF;
 			}
 			
 			for (TopologiesEnum topology : input.getTopologies()) {
@@ -124,78 +125,88 @@ public class SimulatorTest {
 							// Iteración de intervalos de tiempo de la simulacion
 
 
+                          for (int k = 1 ; k <= 2; k++){
+							   demandaNumero = 1;
+							   bloqueos = 0;
+							  graph = null;
+							  graph = Utils.createTopology(topology, input.getCores(), input.getFsWidth(), input.getCapacity());
+							 establishedRoutes = new ArrayList<>();
+							  for (int i = 0; i < intervalosDeTiempoRSA; i++) {
 
-							for (int i = 0; i < intervalosDeTiempoRSA; i++) {
+								  //  Demandas a ser transmitidas en el intervalo de tiempo i
+								  List<Demand> demands = listaDemandas.get(i);
+								  for (Demand demand : demands) {
+									  demandaNumero++;
+									  EstablishedRoute establishedRoute;
+									  // Algoritmo RSA con conmutación de nucleos
+									  establishedRoute = Algorithms.ruteoCoreMultiple(graph, demand, input.getCapacity(),
+											  input.getCores(), input.getMaxCrosstalk(), crosstalkPerUnitLength);
 
-								//  Demandas a ser transmitidas en el intervalo de tiempo i
-								List<Demand> demands = listaDemandas.get(i);
-								for (Demand demand : demands) {
-									demandaNumero++;
-									EstablishedRoute establishedRoute;
-									// Algoritmo RSA con conmutación de nucleos
-									establishedRoute = Algorithms.ruteoCoreMultiple(graph, demand, input.getCapacity(),
-												input.getCores(), input.getMaxCrosstalk(), crosstalkPerUnitLength);
+									  if (establishedRoute == null || establishedRoute.getFsIndexBegin() == -1) {
+										  // Bloqueo
+										  System.out.println("Insertando demanda Nro : " + demandaNumero + " en el tiempo t= "+ i +" ---------------------->"+ " Bloqueado");
+										  demand.setBlocked(true);
+										  insertDataBloqueo(algorithm.label(), topology.label(), "" + i, "" + demand.getId(),
+												  "" + input.getErlang(), crosstalkPerUnitLength.toString());
+										  bloqueos++;
+									  } else {
+										  // Ruta establecida
+										  System.out.println("Insertando demanda Nro : " + demandaNumero + " en el tiempo t= "+ i +" ---->"+ " Ejecutado");
+										  AssignFsResponse response = Utils.assignFs(graph, establishedRoute,
+												  crosstalkPerUnitLength);
+										  establishedRoute = response.getRoute();
+										  graph = response.getGraph();
+										  establishedRoutes.add(establishedRoute);
+									  }
 
-									if (establishedRoute == null || establishedRoute.getFsIndexBegin() == -1) {
-										// Bloqueo
-										System.out.println("Insertando demanda Nro : " + demandaNumero + " en el tiempo t= "+ i +" ---------------------->"+ " Bloqueado");
-										demand.setBlocked(true);
-										insertDataBloqueo(algorithm.label(), topology.label(), "" + i, "" + demand.getId(),
-												"" + input.getErlang(), crosstalkPerUnitLength.toString());
-										bloqueos++;
-									} else {
-										// Ruta establecida
-										System.out.println("Insertando demanda Nro : " + demandaNumero + " en el tiempo t= "+ i +" ---->"+ " Ejecutado");
-										AssignFsResponse response = Utils.assignFs(graph, establishedRoute,
-												crosstalkPerUnitLength);
-										establishedRoute = response.getRoute();
-										graph = response.getGraph();
-										establishedRoutes.add(establishedRoute);
-									}
+								  }
 
-								}
+								  for (EstablishedRoute route : establishedRoutes) {
+									  route.subLifeTime();
+								  }
 
-								for (EstablishedRoute route : establishedRoutes) {
-									route.subLifeTime();
-								}
+								  for (int ri = 0; ri < establishedRoutes.size(); ri++) {
+									  EstablishedRoute route = establishedRoutes.get(ri);
+									  if (route.getLifetime().equals(0)) {
+										  Utils.deallocateFs(graph, route, crosstalkPerUnitLength);
+										  establishedRoutes.remove(ri);
+										  ri--;
+									  }
+								  }
 
-								for (int ri = 0; ri < establishedRoutes.size(); ri++) {
-									EstablishedRoute route = establishedRoutes.get(ri);
-									if (route.getLifetime().equals(0)) {
-										Utils.deallocateFs(graph, route, crosstalkPerUnitLength);
-										establishedRoutes.remove(ri);
-										ri--;
-									}
-								}
+								  // Proceso de Desfgragmentación
+								  if(k == 2 && intervalosDeTiempoDF != null && i == desfragmentar && nDF <= input.getDefragmentationCount()) {
+									  System.out.println("Iniciando proceso de Desfragmentación....: ");
 
-								// Proceso de Desfgragmentación
-								if(intervalosDeTiempoDF != null && i == intervalosDeTiempoDF && countDF <= input.getDefragmentationCount()) {
-									System.out.println("Iniciando proceso de Desfragmentación....: ");
+									  // Cálculo del BFR antes de la desfgragmentación
+									  Double bfrRed = Algorithms.bfrRed(graph, input.getCapacity(), input.getCores());
+									  System.out.println("El BFR de la red antes de la desfragmentación es :"+ bfrRed);
+									  System.out.println("Rutas activas :"+ establishedRoutes.size());
+									  Algorithms.inciarProcesoDesfragmentacion(establishedRoutes, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength);
 
-									// Cálculo del BFR antes de la desfgragmentación
-									Double bfrRed = Algorithms.bfrRed(graph, input.getCapacity(), input.getCores());
-									System.out.println("El BFR de la red antes de la desfragmentación es :"+ bfrRed);
-									System.out.println("Rutas activas :"+ establishedRoutes.size());
-									Algorithms.inciarProcesoDesfragmentacion(establishedRoutes, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength);
-
-									// Cálculo del BFR luego de la desfgragmentación
-									bfrRed = Algorithms.bfrRed(graph, input.getCapacity(), input.getCores());
-									System.out.println("El BFR de la red luego de la desfragmentación es :"+ bfrRed);
-									System.out.println("Rutas activas :"+ establishedRoutes.size());
-									intervalosDeTiempoDF = i + intervalosDeTiempoDF;
-								    nDF = nDF +1;
-								}
+									  // Cálculo del BFR luego de la desfgragmentación
+									  bfrRed = Algorithms.bfrRed(graph, input.getCapacity(), input.getCores());
+									  System.out.println("El BFR de la red luego de la desfragmentación es :"+ bfrRed);
+									  System.out.println("Rutas activas :"+ establishedRoutes.size());
+									  desfragmentar = desfragmentar + intervalosDeTiempoDF;
+									  if(i == 10000) {
+										  int a = 1;
+									  }
+									  nDF = nDF +1;
+								  }
 
 
 
 
-							}
-							System.out.println("Topología utilizada: " + topologiaUtilizada);
-							System.out.println("Erlangs : " + input.getErlang() );
-							System.out.println("TOTAL DE BLOQUEOS: " + bloqueos);
-							System.out.println("Cantidad de demandas: " + demandaNumero);
-							System.out.println("Cantidad de veces que se desfragmentó: " + nDF);
-							System.out.println(System.lineSeparator());
+							  }
+							  System.out.println("Topología utilizada: " + topologiaUtilizada);
+							  System.out.println("Erlangs : " + input.getErlang() );
+							  System.out.println("TOTAL DE BLOQUEOS: " + bloqueos);
+							  System.out.println("Cantidad de demandas: " + demandaNumero);
+							  System.out.println("Cantidad de veces que se desfragmentó: " + nDF);
+							  System.out.println(System.lineSeparator());
+						  }
+
 						}
 					}
 				}

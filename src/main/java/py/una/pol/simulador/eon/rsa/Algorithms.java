@@ -185,11 +185,11 @@ public class Algorithms {
 		 
 		 List<EstablishedRoute> sublista = obtenerPeoresRutasActivas(listaRutasActivas); // Obtiene el 30% de peores rutas
 
-		 /*int eliminado = 0;
+		 int eliminado = 0;
 		 while (eliminado < sublista.size()) {
 			 listaRutasActivas.remove(0);
 			 eliminado++;
-		 }*/
+		 }
 		 // Ordenar la subLista de rutas activas por FS de forma descendente
 	     ordenarRutasPorFsDesc(sublista);
 	     
