@@ -52,7 +52,7 @@ public class SimulatorTest {
 		input.setLambda(5);
 		
 		// Volumen del tráfico promedio en cada instante de tiempo
-		input.setErlang(3000);
+		input.setErlang(2000);
 		
 		// Algoritmos RSA
 		input.setAlgorithms(new ArrayList<>());
@@ -73,7 +73,7 @@ public class SimulatorTest {
 		input.getCrosstalkPerUnitLenghtList().add((2 * Math.pow(0.0000316, 2) * 0.055) / (4000000 * 0.000045));  // h= 6,102E-13
 		
 		//Cantidad de veces que se va a realizar la desfragmentación
-		input.setDefragmentationCount(1);
+		input.setDefragmentationCount(3);
 		return input;
 	}
 
@@ -125,12 +125,12 @@ public class SimulatorTest {
 							// Iteración de intervalos de tiempo de la simulacion
 
 
-                          for (int k = 1 ; k <= 2; k++){
+                         /* for (int k = 1 ; k <= 2; k++){
 							   demandaNumero = 1;
 							   bloqueos = 0;
 							  graph = null;
 							  graph = Utils.createTopology(topology, input.getCores(), input.getFsWidth(), input.getCapacity());
-							 establishedRoutes = new ArrayList<>();
+							 establishedRoutes = new ArrayList<>();*/
 							  for (int i = 0; i < intervalosDeTiempoRSA; i++) {
 
 								  //  Demandas a ser transmitidas en el intervalo de tiempo i
@@ -175,7 +175,7 @@ public class SimulatorTest {
 								  }
 
 								  // Proceso de Desfgragmentación
-								  if(k == 2 && intervalosDeTiempoDF != null && i == desfragmentar && nDF <= input.getDefragmentationCount()) {
+								  if(intervalosDeTiempoDF != null && i == desfragmentar && nDF <= input.getDefragmentationCount()) {
 									  System.out.println("Iniciando proceso de Desfragmentación....: ");
 
 									  // Cálculo del BFR antes de la desfgragmentación
@@ -189,9 +189,6 @@ public class SimulatorTest {
 									  System.out.println("El BFR de la red luego de la desfragmentación es :"+ bfrRed);
 									  System.out.println("Rutas activas :"+ establishedRoutes.size());
 									  desfragmentar = desfragmentar + intervalosDeTiempoDF;
-									  if(i == 10000) {
-										  int a = 1;
-									  }
 									  nDF = nDF +1;
 								  }
 
@@ -205,7 +202,7 @@ public class SimulatorTest {
 							  System.out.println("Cantidad de demandas: " + demandaNumero);
 							  System.out.println("Cantidad de veces que se desfragmentó: " + nDF);
 							  System.out.println(System.lineSeparator());
-						  }
+						//  }
 
 						}
 					}

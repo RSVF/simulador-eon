@@ -50,7 +50,7 @@ public class EstablishedRoute {
      */
     private Double bfrRuta;
     
-    GraphPath<Integer, Link> dijkstra;
+    private Double dijkstra;
     /**
      * Constructor vacío
      */
@@ -71,7 +71,7 @@ public class EstablishedRoute {
      * path
      */
     public EstablishedRoute(List<Link> path, Integer fsIndexBegin, Integer fsWidth, Integer lifetime, Integer from, Integer to, List<Integer> pathCores, 
-    		Double bfrRuta, GraphPath<Integer, Link> dijkstra) {
+    		Double bfrRuta, Double dijkstra) {
         this.path = path;
         this.fsIndexBegin = fsIndexBegin;
         this.fsWidth = fsWidth;
