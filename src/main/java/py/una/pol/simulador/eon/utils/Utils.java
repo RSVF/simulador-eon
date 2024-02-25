@@ -98,7 +98,7 @@ public class Utils {
                 destination = rand.nextInt(cantNodos);
             }
             Integer tLife = MathUtils.getLifetime(HT);
-            demands.add(new Demand(j, source, destination, fs, tLife, false, insertionTime));
+            demands.add(new Demand(j, source, destination, fs, tLife, false, insertionTime, null));
         }
         return demands;
     }

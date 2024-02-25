@@ -52,7 +52,7 @@ public class SimulatorTest {
 		input.setLambda(5);
 		
 		// Volumen del tráfico promedio en cada instante de tiempo
-		input.setErlang(2000);
+		input.setErlang(5000);
 		
 		// Algoritmos RSA
 		input.setAlgorithms(new ArrayList<>());
@@ -73,7 +73,7 @@ public class SimulatorTest {
 		input.getCrosstalkPerUnitLenghtList().add((2 * Math.pow(0.0000316, 2) * 0.055) / (4000000 * 0.000045));  // h= 6,102E-13
 		
 		//Cantidad de veces que se va a realizar la desfragmentación
-		input.setDefragmentationCount(3);
+		input.setDefragmentationCount(2);
 		return input;
 	}
 
@@ -89,7 +89,7 @@ public class SimulatorTest {
 			Integer desfragmentar = null;
 			Integer countDF = null;
 			Integer nDF = 0;
-			String topologiaUtilizada = Constants.SIMULADOR_TOPOLOGIA_NSFNET;
+			String topologiaUtilizada = Constants.SIMULADOR_TOPOLOGIA_USNET;
 			Integer intervalosDeTiempoRSA = input.getSimulationTime();
 			
 			if(input.getDefragmentationCount() != null && input.getDefragmentationCount() != 0) {
@@ -125,12 +125,13 @@ public class SimulatorTest {
 							// Iteración de intervalos de tiempo de la simulacion
 
 
-                         /* for (int k = 1 ; k <= 2; k++){
+                         for (int k = 1 ; k <= 2; k++){
 							   demandaNumero = 1;
+							   nDF = 0;
 							   bloqueos = 0;
 							  graph = null;
 							  graph = Utils.createTopology(topology, input.getCores(), input.getFsWidth(), input.getCapacity());
-							 establishedRoutes = new ArrayList<>();*/
+							 establishedRoutes = new ArrayList<>();
 							  for (int i = 0; i < intervalosDeTiempoRSA; i++) {
 
 								  //  Demandas a ser transmitidas en el intervalo de tiempo i
@@ -159,6 +160,12 @@ public class SimulatorTest {
 										  establishedRoutes.add(establishedRoute);
 									  }
 
+									  if(i == 5000 || i == 15000 ){
+										  System.out.println("TOTAL DE BLOQUEOS: " + bloqueos);
+										  System.out.println("Cantidad de demandas: " + demandaNumero);
+										  System.out.println(System.lineSeparator());
+									  }
+
 								  }
 
 								  for (EstablishedRoute route : establishedRoutes) {
@@ -175,24 +182,29 @@ public class SimulatorTest {
 								  }
 
 								  // Proceso de Desfgragmentación
-								  if(intervalosDeTiempoDF != null && i == desfragmentar && nDF <= input.getDefragmentationCount()) {
-									  System.out.println("Iniciando proceso de Desfragmentación....: ");
+								//  if(k == 2 && intervalosDeTiempoDF != null && i == desfragmentar && nDF <= input.getDefragmentationCount()) {
+								  if( k == 2 && (i== 10000)) {
+
 
 									  // Cálculo del BFR antes de la desfgragmentación
 									  Double bfrRed = Algorithms.bfrRed(graph, input.getCapacity(), input.getCores());
-									  System.out.println("El BFR de la red antes de la desfragmentación es :"+ bfrRed);
-									  System.out.println("Rutas activas :"+ establishedRoutes.size());
-									  Algorithms.inciarProcesoDesfragmentacion(establishedRoutes, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength);
+									  while (bfrRed > 0.6){
+										  System.out.println("Iniciando proceso de Desfragmentación....: ");
 
-									  // Cálculo del BFR luego de la desfgragmentación
-									  bfrRed = Algorithms.bfrRed(graph, input.getCapacity(), input.getCores());
-									  System.out.println("El BFR de la red luego de la desfragmentación es :"+ bfrRed);
-									  System.out.println("Rutas activas :"+ establishedRoutes.size());
-									  desfragmentar = desfragmentar + intervalosDeTiempoDF;
-									  nDF = nDF +1;
+										  System.out.println("El BFR de la red antes de la desfragmentación es :"+ bfrRed);
+										  System.out.println("Rutas activas :"+ establishedRoutes.size());
+										  Algorithms.inciarProcesoDesfragmentacion(establishedRoutes, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength);
+
+										  // Cálculo del BFR luego de la desfgragmentación
+										  bfrRed = Algorithms.bfrRed(graph, input.getCapacity(), input.getCores());
+										  System.out.println("El BFR de la red luego de la desfragmentación es :"+ bfrRed);
+										  System.out.println("Rutas activas :"+ establishedRoutes.size());
+										  desfragmentar = desfragmentar + intervalosDeTiempoDF;
+										  nDF = nDF +1;
+										  System.out.println("TOTAL DE BLOQUEOS: " + bloqueos);
+									  }
+
 								  }
-
-
 
 
 							  }
@@ -202,7 +214,7 @@ public class SimulatorTest {
 							  System.out.println("Cantidad de demandas: " + demandaNumero);
 							  System.out.println("Cantidad de veces que se desfragmentó: " + nDF);
 							  System.out.println(System.lineSeparator());
-						//  }
+						  }
 
 						}
 					}

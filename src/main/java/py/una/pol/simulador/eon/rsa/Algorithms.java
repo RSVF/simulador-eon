@@ -288,7 +288,7 @@ public class Algorithms {
 		
 		public static List<EstablishedRoute> obtenerPeoresRutasActivas(List<EstablishedRoute> listaRutasActivas) {
 		    // Calcular el 30% de rutas activas
-		    int tamañoSubLista = (int) (listaRutasActivas.size() * 0.5);
+		    int tamañoSubLista = (int) (listaRutasActivas.size() * 1);
 		    // Obtener sublista con el 30% de las rutas activas
 		    List<EstablishedRoute> sublista = new ArrayList<>(listaRutasActivas.subList(0, tamañoSubLista));
 
@@ -320,7 +320,7 @@ public class Algorithms {
 			List<Demand> listaDemandas = new ArrayList<>();
 			for (int rr = 0; rr < listaRutasReRuteo.size(); rr++) {
 				EstablishedRoute r = listaRutasReRuteo.get(rr);
-				Demand demanda = new Demand(rr, r.getFrom(), r.getTo(), r.getFsWidth(), r.getLifetime(), null, null);
+				Demand demanda = new Demand(rr, r.getFrom(), r.getTo(), r.getFsWidth(), r.getLifetime(), null, null, r.getPath());
 				// Agrega la demanda a la lista
 				listaDemandas.add(demanda);
 			}
@@ -348,8 +348,8 @@ public class Algorithms {
 			for (Demand demand : demandas) {
 				EstablishedRoute rutasEstablecida;
 				// Algoritmo RSA con conmutación de nucleos
-				rutasEstablecida = Algorithms.ruteoCoreMultiple(red, demand, capacidadEnlance,
-							cores, maxCrosstalk, crosstalkPerUnitLength);
+				rutasEstablecida = Algorithms.reRuteo(red, demand, capacidadEnlance,
+							cores, maxCrosstalk, crosstalkPerUnitLength, demand.getPath());
 				
 				if (rutasEstablecida == null || rutasEstablecida.getFsIndexBegin() == -1) {
 					// Bloqueo
@@ -367,6 +367,92 @@ public class Algorithms {
 		}
 			System.out.println("Cantidad de Bloqueos luego de reruteo es: "+ bloqueos);
 		}
+
+
+
+
+	public static EstablishedRoute reRuteo(Graph<Integer, Link> graph, Demand demand, Integer capacity,
+													 Integer cores, BigDecimal umbralRuidoMax, Double crosstalkPerUnitLength, List<Link> path) {
+		int k = 0;
+
+
+		List<List<Integer>> kspPlacedCores = new ArrayList<>();
+		Integer fsIndexBegin = null;
+		Integer selectedIndex;
+
+
+			fsIndexBegin = null;
+		    List<Link> ksp = path;
+
+			// RECORRIDO DE LOS FS
+			for (int indiceFS = 0; indiceFS <= capacity - demand.getFs(); indiceFS++) {
+				List<Link> enlacesLibres = new ArrayList<>();
+				List<Integer> kspCores = new ArrayList<>();
+				List<BigDecimal> crosstalkFSList = new ArrayList<>();
+
+				for (int fsCrosstalkIndex = 0; fsCrosstalkIndex < demand.getFs(); fsCrosstalkIndex++) {
+					crosstalkFSList.add(BigDecimal.ZERO);
+				}
+
+				// RECORRIDO DE LOS ENLACES (RED)
+				for (Link link : ksp) {
+					// RECORRIDO DE LOS CORES
+					for (int core = 0; core < cores; core++) {
+
+						// OBTIENE EL BLOQUE DE FS (RED)
+						List<FrequencySlot> bloqueFS = link.getCores().get(core).getFrequencySlots().subList(indiceFS,
+								indiceFS + demand.getFs());
+
+						// CONTROLA SI ESTA OCUPADO POR UNA DEMANDA
+						if (isFSBlockFree(bloqueFS)) {
+
+							// CONTROL DE RUIDO
+
+							if (esBloqueFsMayorUmbralRuido(bloqueFS, umbralRuidoMax, crosstalkFSList)) {
+
+								// CONTROL DE RUIDO EN LOS NUCLEOS VECINOS
+								if (isNextToCrosstalkFreeCores(link, umbralRuidoMax, core, indiceFS, demand.getFs(),
+										crosstalkPerUnitLength)) {
+
+									enlacesLibres.add(link);
+									kspCores.add(core);
+									fsIndexBegin = indiceFS;
+									selectedIndex = k;
+									for (int crosstalkFsListIndex = 0; crosstalkFsListIndex < crosstalkFSList.size(); crosstalkFsListIndex++) {
+
+										BigDecimal crosstalkRuta = crosstalkFSList.get(crosstalkFsListIndex);
+										crosstalkRuta = crosstalkRuta.add(Utils.toDB(Utils.XT(Utils.getCantidadVecinos(core),
+												crosstalkPerUnitLength, link.getDistance())));
+
+										crosstalkFSList.set(crosstalkFsListIndex, crosstalkRuta);
+									}
+									core = cores;
+									// Si todos los enlaces tienen el mismo bloque de FS libre, se agrega la ruta a
+									// la lista de rutas establecidas.
+									if (enlacesLibres.size() == ksp.size()) {
+										kspPlacedCores.add(kspCores);
+										indiceFS = capacity;
+									}
+								}
+							}
+
+						}
+					}
+				}
+			}
+
+
+		EstablishedRoute establisedRoute;
+		if (fsIndexBegin != null) {
+			establisedRoute = new EstablishedRoute(path, fsIndexBegin, demand.getFs(),
+					demand.getLifetime(), demand.getSource(), demand.getDestination(), kspPlacedCores.get(0), null, null);
+		} else {
+			// System.out.println("Bloqueo");
+			establisedRoute = null;
+		}
+		return establisedRoute;
+
+	}
 		    
 }			
 		

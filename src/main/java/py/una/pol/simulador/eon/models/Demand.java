@@ -2,6 +2,8 @@ package py.una.pol.simulador.eon.models;
 
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * Demanda generada para la conexión
  *
@@ -39,6 +41,8 @@ public class Demand {
      */
     private final Integer insertionTime;
 
+    private List<Link> path;
+
     /**
      * Constructor con todos los parámetros
      *
@@ -51,7 +55,7 @@ public class Demand {
      * @param insertionTime Tiempo en el que se inserta la demanda
      */
     public Demand(Integer id, Integer source, Integer destination, Integer fs,
-            Integer lifetime, Boolean blocked, Integer insertionTime) {
+            Integer lifetime, Boolean blocked, Integer insertionTime, List<Link> path) {
         this.id = id;
         this.source = source;
         this.destination = destination;
@@ -59,6 +63,7 @@ public class Demand {
         this.lifetime = lifetime;
         this.blocked = blocked;
         this.insertionTime = insertionTime;
+        this.path = path;
     }
 
     @Override
