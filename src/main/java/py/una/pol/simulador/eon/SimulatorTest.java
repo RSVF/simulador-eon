@@ -52,7 +52,7 @@ public class SimulatorTest {
 		input.setLambda(5);
 		
 		// Volumen del tráfico promedio en cada instante de tiempo
-		input.setErlang(5000);
+		input.setErlang(2000);
 		
 		// Algoritmos RSA
 		input.setAlgorithms(new ArrayList<>());
@@ -129,9 +129,9 @@ public class SimulatorTest {
 							   demandaNumero = 1;
 							   nDF = 0;
 							   bloqueos = 0;
-							  graph = null;
 							  graph = Utils.createTopology(topology, input.getCores(), input.getFsWidth(), input.getCapacity());
-							 establishedRoutes = new ArrayList<>();
+							  System.out.println("BFR RED SEGUNDA SIMULACION NRO " +k+" : ---> "+ Algorithms.bfrRed(graph, 320, 7));
+							  establishedRoutes = new ArrayList<>();
 							  for (int i = 0; i < intervalosDeTiempoRSA; i++) {
 
 								  //  Demandas a ser transmitidas en el intervalo de tiempo i
@@ -183,14 +183,10 @@ public class SimulatorTest {
 
 								  // Proceso de Desfgragmentación
 								//  if(k == 2 && intervalosDeTiempoDF != null && i == desfragmentar && nDF <= input.getDefragmentationCount()) {
-								  if( k == 2 && (i== 10000)) {
-
-
+								  if( k == 2 && (i== 5000 || i == 10000 || i == 15000)) {
 									  // Cálculo del BFR antes de la desfgragmentación
 									  Double bfrRed = Algorithms.bfrRed(graph, input.getCapacity(), input.getCores());
-									  while (bfrRed > 0.6){
 										  System.out.println("Iniciando proceso de Desfragmentación....: ");
-
 										  System.out.println("El BFR de la red antes de la desfragmentación es :"+ bfrRed);
 										  System.out.println("Rutas activas :"+ establishedRoutes.size());
 										  Algorithms.inciarProcesoDesfragmentacion(establishedRoutes, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength);
@@ -200,9 +196,9 @@ public class SimulatorTest {
 										  System.out.println("El BFR de la red luego de la desfragmentación es :"+ bfrRed);
 										  System.out.println("Rutas activas :"+ establishedRoutes.size());
 										  desfragmentar = desfragmentar + intervalosDeTiempoDF;
-										  nDF = nDF +1;
 										  System.out.println("TOTAL DE BLOQUEOS: " + bloqueos);
-									  }
+										  nDF = nDF +1;
+
 
 								  }
 

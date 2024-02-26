@@ -178,34 +178,25 @@ public class Algorithms {
 			}
 
 		 // Ordenar la lista de rutas activas por BFR de forma descendente
-		 ordenarRutasPorBfrDesc(listaRutasActivas);		
-		 
+		 ordenarRutasPorBfrDesc(listaRutasActivas);
+		 ordenarRutasPorFsDesc(listaRutasActivas);
 		 List<EstablishedRoute> sublista = obtenerPeoresRutasActivas(listaRutasActivas); // Obtiene el 30% de peores rutas
 		 calcularDijstra(sublista, red);
 
 		 int eliminado = 0;
 		 while (eliminado < sublista.size()) {
+			 Utils.deallocateFs(red, listaRutasActivas.get(0) , crosstalkPerUnitLength);
 			 listaRutasActivas.remove(0);
 			 eliminado++;
 		 }
-		 // Ordenar la subLista de rutas activas por FS de forma descendente
-	     ordenarRutasPorFsDesc(sublista);
-	     
 
-	  // Crear un comparador compuesto
-	  //   EstablishedRouteComparator comparator = new EstablishedRouteComparator();
-	  // Ordenar la subLista de rutas activas por el comparador compuesto
-	  //   sublista.sort(comparator);
 
-	     //Desasignar FS de la red para toda esa sublista
-	     desinstalarRutas(sublista,listaRutasActivas, red, crosstalkPerUnitLength);
-	     
 	     Double bfrRed = Algorithms.bfrRed(red, capacidadEnlace, 7);
 	     System.out.println("El BFR de la red luego de desasignar  es :"+ bfrRed);
 	     //Se genera una lista de demandas apartir de la subLista, para luego volver a rerutear
-	     List<Demand> listaDemandasR = generarDemandas(sublista);
+	     //List<Demand> listaDemandasR = generarDemandas(sublista);
 	     
-	     reProcesarDemandas(listaDemandasR, red, capacidadEnlace, maxCrosstalk, crosstalkPerUnitLength, 7, listaRutasActivas);
+	     reProcesarDemandas(sublista, red, capacidadEnlace, maxCrosstalk, crosstalkPerUnitLength, 7, listaRutasActivas);
 		 
 	 }
 	 
@@ -283,27 +274,21 @@ public class Algorithms {
 		
 		public static void ordenarRutasPorBfrDesc(List<EstablishedRoute> listaRutasActivas){
 			Collections.sort(listaRutasActivas, Comparator.comparingDouble(EstablishedRoute::getBfrRuta).reversed());
-		}		
-		 
-		
+		}
+
+	    public static void ordenarRutasPorFsDesc(List<EstablishedRoute> listaRutasActivas) {
+		    Collections.sort(listaRutasActivas, Comparator.comparingInt(EstablishedRoute::getFsWidth));
+
+		}
+
 		public static List<EstablishedRoute> obtenerPeoresRutasActivas(List<EstablishedRoute> listaRutasActivas) {
-		    // Calcular el 30% de rutas activas
 		    int tamañoSubLista = (int) (listaRutasActivas.size() * 1);
-		    // Obtener sublista con el 30% de las rutas activas
 		    List<EstablishedRoute> sublista = new ArrayList<>(listaRutasActivas.subList(0, tamañoSubLista));
-
-		    // Eliminar el 30% de las rutas activas de la lista principal
-		     //listaRutasActivas.removeAll(sublista);
-
 		    return sublista;
 		}
 
 
-	public static void ordenarRutasPorFsDesc(List<EstablishedRoute> listaRutasActivas) {
-		Collections.sort(listaRutasActivas,
-				Comparator.comparingInt(EstablishedRoute::getFsWidth).reversed()
-						.thenComparing(EstablishedRoute::getDijkstra, Comparator.reverseOrder()));
-	}
+
 
 
 	public static void desinstalarRutas(List<EstablishedRoute> subListaRutasLiberar, List<EstablishedRoute> listaRutasActivas, Graph<Integer, Link> red,
@@ -339,23 +324,20 @@ public class Algorithms {
 			}	
 		}
 		
-		public static void reProcesarDemandas(List<Demand> demandas, Graph<Integer, Link> red, 
+		public static void reProcesarDemandas(List<EstablishedRoute> rutas, Graph<Integer, Link> red,
 				Integer capacidadEnlance, BigDecimal maxCrosstalk, Double crosstalkPerUnitLength, Integer cores, 
 				List<EstablishedRoute> listasRutasActivas){
 			List<EstablishedRoute> listaRutasEstablecidas = new ArrayList<>();
 			int bloqueos = 0;
 			int asigancion = 0;
-			for (Demand demand : demandas) {
+			for (EstablishedRoute ruta : rutas) {
 				EstablishedRoute rutasEstablecida;
 				// Algoritmo RSA con conmutación de nucleos
-				rutasEstablecida = Algorithms.reRuteo(red, demand, capacidadEnlance,
-							cores, maxCrosstalk, crosstalkPerUnitLength, demand.getPath());
+				rutasEstablecida = Algorithms.reRuteo(red, ruta, capacidadEnlance,
+							cores, maxCrosstalk, crosstalkPerUnitLength, ruta.getPath());
 				
 				if (rutasEstablecida == null || rutasEstablecida.getFsIndexBegin() == -1) {
-					// Bloqueo
-					demand.setBlocked(true);
 					bloqueos++;
-					
 				} else {
 					// Ruta establecida
 					AssignFsResponse response = Utils.assignFs(red, rutasEstablecida, crosstalkPerUnitLength);
@@ -371,26 +353,20 @@ public class Algorithms {
 
 
 
-	public static EstablishedRoute reRuteo(Graph<Integer, Link> graph, Demand demand, Integer capacity,
+	public static EstablishedRoute reRuteo(Graph<Integer, Link> graph, EstablishedRoute ruta, Integer capacity,
 													 Integer cores, BigDecimal umbralRuidoMax, Double crosstalkPerUnitLength, List<Link> path) {
 		int k = 0;
-
-
 		List<List<Integer>> kspPlacedCores = new ArrayList<>();
 		Integer fsIndexBegin = null;
-		Integer selectedIndex;
-
-
-			fsIndexBegin = null;
-		    List<Link> ksp = path;
+		List<Link> ksp = path;
 
 			// RECORRIDO DE LOS FS
-			for (int indiceFS = 0; indiceFS <= capacity - demand.getFs(); indiceFS++) {
+			for (int indiceFS = 0; indiceFS <= capacity - ruta.getFsWidth(); indiceFS++) {
 				List<Link> enlacesLibres = new ArrayList<>();
 				List<Integer> kspCores = new ArrayList<>();
 				List<BigDecimal> crosstalkFSList = new ArrayList<>();
 
-				for (int fsCrosstalkIndex = 0; fsCrosstalkIndex < demand.getFs(); fsCrosstalkIndex++) {
+				for (int fsCrosstalkIndex = 0; fsCrosstalkIndex < ruta.getFsWidth(); fsCrosstalkIndex++) {
 					crosstalkFSList.add(BigDecimal.ZERO);
 				}
 
@@ -401,7 +377,7 @@ public class Algorithms {
 
 						// OBTIENE EL BLOQUE DE FS (RED)
 						List<FrequencySlot> bloqueFS = link.getCores().get(core).getFrequencySlots().subList(indiceFS,
-								indiceFS + demand.getFs());
+								indiceFS + ruta.getFsWidth());
 
 						// CONTROLA SI ESTA OCUPADO POR UNA DEMANDA
 						if (isFSBlockFree(bloqueFS)) {
@@ -411,13 +387,11 @@ public class Algorithms {
 							if (esBloqueFsMayorUmbralRuido(bloqueFS, umbralRuidoMax, crosstalkFSList)) {
 
 								// CONTROL DE RUIDO EN LOS NUCLEOS VECINOS
-								if (isNextToCrosstalkFreeCores(link, umbralRuidoMax, core, indiceFS, demand.getFs(),
+								if (isNextToCrosstalkFreeCores(link, umbralRuidoMax, core, indiceFS, ruta.getFsWidth(),
 										crosstalkPerUnitLength)) {
-
 									enlacesLibres.add(link);
 									kspCores.add(core);
 									fsIndexBegin = indiceFS;
-									selectedIndex = k;
 									for (int crosstalkFsListIndex = 0; crosstalkFsListIndex < crosstalkFSList.size(); crosstalkFsListIndex++) {
 
 										BigDecimal crosstalkRuta = crosstalkFSList.get(crosstalkFsListIndex);
@@ -441,11 +415,10 @@ public class Algorithms {
 				}
 			}
 
-
 		EstablishedRoute establisedRoute;
-		if (fsIndexBegin != null) {
-			establisedRoute = new EstablishedRoute(path, fsIndexBegin, demand.getFs(),
-					demand.getLifetime(), demand.getSource(), demand.getDestination(), kspPlacedCores.get(0), null, null);
+		if (fsIndexBegin != null && !kspPlacedCores.isEmpty()) {
+			establisedRoute = new EstablishedRoute(path, fsIndexBegin, ruta.getFsWidth(),
+					ruta.getLifetime(), ruta.getFrom(), ruta.getTo(), kspPlacedCores.get(0), null, null);
 		} else {
 			// System.out.println("Bloqueo");
 			establisedRoute = null;
