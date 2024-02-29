@@ -183,7 +183,8 @@ public class SimulatorTest {
 
 								  // Proceso de Desfgragmentación
 								//  if(k == 2 && intervalosDeTiempoDF != null && i == desfragmentar && nDF <= input.getDefragmentationCount()) {
-								  if( k == 2 && (i== 5000 || i == 10000 || i == 15000)) {
+								  if( k == 2 && (i == 1000 || i == 2000 || i == 3000 || i == 4000 || i == 5000 || i ==6000 || i == 7000 || i == 8000 || i == 9000 || i == 10000 || i == 11000
+								                 || i == 12000 || i == 13000 || i == 14000 || i ==15000 || i == 16000 || i == 17000 || i == 18000 || i == 19000 || i == 20000)){
 									  // Cálculo del BFR antes de la desfgragmentación
 									  Double bfrRed = Algorithms.bfrRed(graph, input.getCapacity(), input.getCores());
 										  System.out.println("Iniciando proceso de Desfragmentación....: ");
@@ -209,6 +210,7 @@ public class SimulatorTest {
 							  System.out.println("TOTAL DE BLOQUEOS: " + bloqueos);
 							  System.out.println("Cantidad de demandas: " + demandaNumero);
 							  System.out.println("Cantidad de veces que se desfragmentó: " + nDF);
+
 							  System.out.println(System.lineSeparator());
 						  }
 

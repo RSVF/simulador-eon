@@ -180,7 +180,7 @@ public class Algorithms {
 		 // Ordenar la lista de rutas activas por BFR de forma descendente
 		 ordenarRutasPorBfrDesc(listaRutasActivas);
 		 ordenarRutasPorFsDesc(listaRutasActivas);
-		 List<EstablishedRoute> sublista = obtenerPeoresRutasActivas(listaRutasActivas); // Obtiene el 30% de peores rutas
+		 List<EstablishedRoute> sublista = obtenerPeoresRutasActivas(listaRutasActivas);
 		 calcularDijstra(sublista, red);
 
 		 int eliminado = 0;
@@ -277,7 +277,7 @@ public class Algorithms {
 		}
 
 	    public static void ordenarRutasPorFsDesc(List<EstablishedRoute> listaRutasActivas) {
-		    Collections.sort(listaRutasActivas, Comparator.comparingInt(EstablishedRoute::getFsWidth));
+		    Collections.sort(listaRutasActivas, Comparator.comparingInt(EstablishedRoute::getFsWidth).reversed());
 
 		}
 
@@ -338,6 +338,7 @@ public class Algorithms {
 				
 				if (rutasEstablecida == null || rutasEstablecida.getFsIndexBegin() == -1) {
 					bloqueos++;
+					System.out.println("Epaaaa. Se produjo bloqueos al reinsertar: "+ bloqueos);
 				} else {
 					// Ruta establecida
 					AssignFsResponse response = Utils.assignFs(red, rutasEstablecida, crosstalkPerUnitLength);
