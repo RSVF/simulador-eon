@@ -181,6 +181,7 @@ public class Algorithms {
 		 ordenarRutasPorBfrDesc(listaRutasActivas);
 		 ordenarRutasPorFsDesc(listaRutasActivas);
 		 List<EstablishedRoute> sublista = obtenerPeoresRutasActivas(listaRutasActivas);
+
 		 calcularDijstra(sublista, red);
 
 		 int eliminado = 0;
@@ -277,7 +278,7 @@ public class Algorithms {
 		}
 
 	    public static void ordenarRutasPorFsDesc(List<EstablishedRoute> listaRutasActivas) {
-		    Collections.sort(listaRutasActivas, Comparator.comparingInt(EstablishedRoute::getFsWidth).reversed());
+		    Collections.sort(listaRutasActivas, Comparator.comparingInt(EstablishedRoute::getFsWidth));
 
 		}
 
