@@ -63,8 +63,8 @@ public class SimulatorTest {
         input.setSimulationTime(MathUtils.getSimulationTime(input.getDemands(), input.getLambda()));
 
         // Umbral del ruido: Máxima atenuación tolerable de la red
-        //input.setMaxCrosstalk(new BigDecimal("0.003162277660168379331998893544")); // XT = -25 dB
-          input.setMaxCrosstalk(new BigDecimal("0.031622776601683793319988935444")); // XT = -15 dB
+            input.setMaxCrosstalk(new BigDecimal("0.003162277660168379331998893544")); // XT = -25 dB
+        //  input.setMaxCrosstalk(new BigDecimal("0.031622776601683793319988935444")); // XT = -15 dB
 
 
         // Características de la fibra utilizada. h = incremento del ruido por unidad de longitud

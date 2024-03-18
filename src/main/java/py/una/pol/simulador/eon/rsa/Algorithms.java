@@ -46,6 +46,10 @@ public class Algorithms {
 
         List<GraphPath<Integer, Link>> kspaths = kspFinder.getPaths(demand.getSource(), demand.getDestination(), 5);
 
+        ordenarKsPathsPorPeso(kspaths);
+
+
+
         while (k < kspaths.size() && kspaths.get(k) != null) {
             fsIndexBegin = null;
             GraphPath<Integer, Link> ksp = kspaths.get(k);
@@ -96,9 +100,13 @@ public class Algorithms {
                                     // Si todos los enlaces tienen el mismo bloque de FS libre, se agrega la ruta a
                                     // la lista de rutas establecidas.
                                     if (enlacesLibres.size() == ksp.getEdgeList().size()) {
+                                        int a = 1;
+                                        kspPlaced.clear();
                                         kspPlaced.add(kspaths.get(selectedIndex));
+                                        kspPlacedCores.clear();
                                         kspPlacedCores.add(kspCores);
-                                        k = kspaths.size();
+
+                                        //k = kspaths.size();
                                         indiceFS = capacity;
                                     }
                                 }
@@ -267,13 +275,16 @@ public class Algorithms {
             Double bfrRuta = bfrRutaActiva(rutaActiva, red, capacidadEnlace);
             rutaActiva.setBfrRuta(bfrRuta);
         }
+        calcularDijstra(listaRutasActivas, red);
 
         // Ordenar la lista de rutas activas por BFR de forma descendente
-        ordenarRutasPorBfr(listaRutasActivas, Constants.ORDENAMIENTO_DESCENDENTE);
-        List<EstablishedRoute> sublista = obtenerPeoresRutasActivas(listaRutasActivas, Constants.PORCENTAJE_30);
-        calcularDijstra(sublista, red);
-        ordenarRutasPorFsDijstra(sublista, Constants.ORDENAMIENTO_ASCENDENTE);
+        //ordenarRutasPorBfr(listaRutasActivas, Constants.ORDENAMIENTO_DESCENDENTE);
+        //ordenarRutasPorFsDijstra(listaRutasActivas, Constants.ORDENAMIENTO_ASCENDENTE);
+        //ordenarRutasPorDijstraFs(listaRutasActivas, Constants.ORDENAMIENTO_ASCENDENTE);
+        ordenarRutasPorDijstra(listaRutasActivas, Constants.ORDENAMIENTO_ASCENDENTE);
 
+
+        List<EstablishedRoute> sublista = obtenerPeoresRutasActivas(listaRutasActivas, Constants.PORCENTAJE_100);
 
         int eliminado = 0;
         while (eliminado < sublista.size()) {
@@ -289,8 +300,8 @@ public class Algorithms {
         // SE GENERA UNA LISTA DE DEMANDAS CON LA SUBLISTA, PARA LUEGO VOLVER A RERUTEAR
         List<Demand> listaDemandasR = generarDemandas(sublista);
 
-        //reProcesarDemandasCaminoOriginal(sublista, red, capacidadEnlace, maxCrosstalk, crosstalkPerUnitLength, 7, listaRutasActivas);
-        reProcesarDemandas(listaDemandasR, red, capacidadEnlace, maxCrosstalk, crosstalkPerUnitLength, 7, listaRutasActivas);
+        reProcesarDemandasCaminoOriginal(sublista, red, capacidadEnlace, maxCrosstalk, crosstalkPerUnitLength, 7, listaRutasActivas);
+        //reProcesarDemandas(listaDemandasR, red, capacidadEnlace, maxCrosstalk, crosstalkPerUnitLength, 7, listaRutasActivas);
     }
 
 
@@ -378,6 +389,27 @@ public class Algorithms {
         });
     }
 
+    public static void ordenarRutasPorDijstraFs(List<EstablishedRoute> listaRutasActivas, String orden) {
+        Comparator<EstablishedRoute> comparadorFsRuta = Comparator.comparingDouble(EstablishedRoute::getDijkstra);
+
+        Collections.sort(listaRutasActivas, (ruta1, ruta2) -> {
+            int comparacion = comparadorFsRuta.compare(ruta1, ruta2);
+            if (comparacion != 0) {
+                return comparacion; // Si la comparación de fs es diferente de cero, devuelve el resultado
+            } else {
+                // Si hay un empate en bfrRuta, desempata usando dijstra sin alterar el orden original
+                return Double.compare(ruta1.getFsWidth(), ruta2.getFsWidth());
+            }
+        });
+    }
+
+    public static void ordenarRutasPorDijstra(List<EstablishedRoute> listaRutasActivas, String orden) {
+        Collections.sort(listaRutasActivas, Comparator.comparingDouble(EstablishedRoute::getDijkstra).reversed());
+    }
+
+    public static void ordenarKsPathsPorPeso(List<GraphPath<Integer, Link>> kspaths) {
+        Collections.sort(kspaths, Comparator.comparingDouble(GraphPath<Integer, Link>::getWeight).reversed());
+    }
 
     public static void ordenarRutasPorBfr(List<EstablishedRoute> listaRutasActivas, String orden) {
         if (Constants.ORDENAMIENTO_DESCENDENTE.equals(orden)) {
