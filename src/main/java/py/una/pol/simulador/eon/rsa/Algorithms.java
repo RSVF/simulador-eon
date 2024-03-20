@@ -38,7 +38,7 @@ public class Algorithms {
         List<GraphPath<Integer, Link>> kspPlaced = new ArrayList<>();
         List<List<Integer>> kspPlacedCores = new ArrayList<>();
         Integer fsIndexBegin = null;
-        Integer selectedIndex;
+        Integer selectedIndex = null;
         // Iteramos los KSP elegidos
         // k caminos más cortos entre source y destination de la demanda actual
 
@@ -46,12 +46,13 @@ public class Algorithms {
 
         List<GraphPath<Integer, Link>> kspaths = kspFinder.getPaths(demand.getSource(), demand.getDestination(), 5);
 
-        ordenarKsPathsPorPeso(kspaths);
+        //ordenarKsPathsPorPeso(kspaths);
 
 
 
         while (k < kspaths.size() && kspaths.get(k) != null) {
             fsIndexBegin = null;
+            selectedIndex = null;
             GraphPath<Integer, Link> ksp = kspaths.get(k);
 
             // RECORRIDO DE LOS FS
@@ -100,14 +101,11 @@ public class Algorithms {
                                     // Si todos los enlaces tienen el mismo bloque de FS libre, se agrega la ruta a
                                     // la lista de rutas establecidas.
                                     if (enlacesLibres.size() == ksp.getEdgeList().size()) {
-                                        int a = 1;
-                                        kspPlaced.clear();
                                         kspPlaced.add(kspaths.get(selectedIndex));
-                                        kspPlacedCores.clear();
                                         kspPlacedCores.add(kspCores);
-
-                                        //k = kspaths.size();
+                                        k = kspaths.size();
                                         indiceFS = capacity;
+
                                     }
                                 }
                             }
@@ -279,9 +277,10 @@ public class Algorithms {
 
         // Ordenar la lista de rutas activas por BFR de forma descendente
         //ordenarRutasPorBfr(listaRutasActivas, Constants.ORDENAMIENTO_DESCENDENTE);
+         ordenarRutasPorFs(listaRutasActivas, Constants.ORDENAMIENTO_ASCENDENTE);
         //ordenarRutasPorFsDijstra(listaRutasActivas, Constants.ORDENAMIENTO_ASCENDENTE);
         //ordenarRutasPorDijstraFs(listaRutasActivas, Constants.ORDENAMIENTO_ASCENDENTE);
-        ordenarRutasPorDijstra(listaRutasActivas, Constants.ORDENAMIENTO_ASCENDENTE);
+        //ordenarRutasPorDijstra(listaRutasActivas, Constants.ORDENAMIENTO_ASCENDENTE);
 
 
         List<EstablishedRoute> sublista = obtenerPeoresRutasActivas(listaRutasActivas, Constants.PORCENTAJE_100);
@@ -300,8 +299,8 @@ public class Algorithms {
         // SE GENERA UNA LISTA DE DEMANDAS CON LA SUBLISTA, PARA LUEGO VOLVER A RERUTEAR
         List<Demand> listaDemandasR = generarDemandas(sublista);
 
-        reProcesarDemandasCaminoOriginal(sublista, red, capacidadEnlace, maxCrosstalk, crosstalkPerUnitLength, 7, listaRutasActivas);
-        //reProcesarDemandas(listaDemandasR, red, capacidadEnlace, maxCrosstalk, crosstalkPerUnitLength, 7, listaRutasActivas);
+        //reProcesarDemandasCaminoOriginal(sublista, red, capacidadEnlace, maxCrosstalk, crosstalkPerUnitLength, 7, listaRutasActivas);
+        reProcesarDemandas(listaDemandasR, red, capacidadEnlace, maxCrosstalk, crosstalkPerUnitLength, 7, listaRutasActivas);
     }
 
 
@@ -378,7 +377,7 @@ public class Algorithms {
     public static void ordenarRutasPorFsDijstra(List<EstablishedRoute> listaRutasActivas, String orden) {
         Comparator<EstablishedRoute> comparadorFsRuta = Comparator.comparingDouble(EstablishedRoute::getFsWidth);
 
-        Collections.sort(listaRutasActivas, (ruta1, ruta2) -> {
+       Collections.sort(listaRutasActivas, (ruta1, ruta2) -> {
             int comparacion = comparadorFsRuta.compare(ruta1, ruta2);
             if (comparacion != 0) {
                 return comparacion; // Si la comparación de fs es diferente de cero, devuelve el resultado
@@ -387,6 +386,10 @@ public class Algorithms {
                 return Double.compare(ruta1.getDijkstra(), ruta2.getDijkstra());
             }
         });
+    }
+
+    public static void ordenarRutasFs(List<EstablishedRoute> listaRutasActivas, String orden) {
+        Collections.sort(listaRutasActivas, Comparator.comparingDouble(EstablishedRoute::getDijkstra));
     }
 
     public static void ordenarRutasPorDijstraFs(List<EstablishedRoute> listaRutasActivas, String orden) {
@@ -500,7 +503,7 @@ public class Algorithms {
         for (Demand demanda : demandas) {
             EstablishedRoute rutasEstablecida;
             // Algoritmo RSA con conmutación de nucleos
-            rutasEstablecida = Algorithms.ruteoCoreMultipleK(red, demanda, capacidadEnlance,
+            rutasEstablecida = Algorithms.ruteoCoreMultiple(red, demanda, capacidadEnlance,
                     cores, maxCrosstalk, crosstalkPerUnitLength);
 
             if (rutasEstablecida == null || rutasEstablecida.getFsIndexBegin() == -1) {

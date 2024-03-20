@@ -53,7 +53,7 @@ public class SimulatorTest {
         input.setLambda(5);
 
         // Volumen del tráfico promedio en cada instante de tiempo
-        input.setErlang(3000);
+        input.setErlang(2000);
 
         // Algoritmos RSA
         input.setAlgorithms(new ArrayList<>());
