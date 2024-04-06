@@ -264,7 +264,7 @@ public class Algorithms {
         return true;
     }
 
-    public static void inciarProcesoDesfragmentacion(List<EstablishedRoute> listaRutasActivas, Graph<Integer, Link> red,
+    public static boolean inciarProcesoDesfragmentacion(List<EstablishedRoute> listaRutasActivas, Graph<Integer, Link> red,
                                                      Integer capacidadEnlace, BigDecimal maxCrosstalk, Double crosstalkPerUnitLength) {
 
         // Se recorre todas las rutas activas, por cada ruta activa se calcula el BFR y se guarda en el objeto
@@ -274,14 +274,7 @@ public class Algorithms {
             rutaActiva.setBfrRuta(bfrRuta);
         }
         calcularDijstra(listaRutasActivas, red);
-
-        // Ordenar la lista de rutas activas por BFR de forma descendente
-        //ordenarRutasPorBfr(listaRutasActivas, Constants.ORDENAMIENTO_DESCENDENTE);
-         ordenarRutasPorFs(listaRutasActivas, Constants.ORDENAMIENTO_ASCENDENTE);
-        //ordenarRutasPorFsDijstra(listaRutasActivas, Constants.ORDENAMIENTO_ASCENDENTE);
-        //ordenarRutasPorDijstraFs(listaRutasActivas, Constants.ORDENAMIENTO_ASCENDENTE);
-        //ordenarRutasPorDijstra(listaRutasActivas, Constants.ORDENAMIENTO_ASCENDENTE);
-
+        ordenarRutasPorFs(listaRutasActivas, Constants.ORDENAMIENTO_DESCENDENTE);
 
         List<EstablishedRoute> sublista = obtenerPeoresRutasActivas(listaRutasActivas, Constants.PORCENTAJE_100);
 
@@ -299,8 +292,33 @@ public class Algorithms {
         // SE GENERA UNA LISTA DE DEMANDAS CON LA SUBLISTA, PARA LUEGO VOLVER A RERUTEAR
         List<Demand> listaDemandasR = generarDemandas(sublista);
 
-        //reProcesarDemandasCaminoOriginal(sublista, red, capacidadEnlace, maxCrosstalk, crosstalkPerUnitLength, 7, listaRutasActivas);
-        reProcesarDemandas(listaDemandasR, red, capacidadEnlace, maxCrosstalk, crosstalkPerUnitLength, 7, listaRutasActivas);
+        boolean block = reProcesarDemandas(listaDemandasR, red, capacidadEnlace, maxCrosstalk, crosstalkPerUnitLength, 7, listaRutasActivas);
+      // return reProcesarDemandasCaminoOriginal(sublista, red, capacidadEnlace, maxCrosstalk, crosstalkPerUnitLength, 7);
+       //reProcesarDemandas(listaDemandasR, red, capacidadEnlace, maxCrosstalk, crosstalkPerUnitLength, 7, listaRutasActivas);
+        return block;
+    }
+
+
+    public static boolean desfragmentacionFactible(List<EstablishedRoute> listaRutasActivas, Graph<Integer, Link> red,
+                                                        Integer capacidadEnlace, BigDecimal maxCrosstalk, Double crosstalkPerUnitLength) {
+
+        // Se recorre todas las rutas activas, por cada ruta activa se calcula el BFR y se guarda en el objeto
+        for (int ra = 0; ra < listaRutasActivas.size(); ra++) {
+            EstablishedRoute rutaActiva = listaRutasActivas.get(ra);
+            Double bfrRuta = bfrRutaActiva(rutaActiva, red, capacidadEnlace);
+            rutaActiva.setBfrRuta(bfrRuta);
+        }
+        calcularDijstra(listaRutasActivas, red);
+        ordenarRutasPorFs(listaRutasActivas, Constants.ORDENAMIENTO_DESCENDENTE);
+        List<EstablishedRoute> sublista = obtenerPeoresRutasActivas(listaRutasActivas, Constants.PORCENTAJE_100);
+        List<Demand> listaDemandasR = generarDemandas(sublista);
+        Double bfrRed = Algorithms.bfrRed(red, capacidadEnlace, 7);
+
+        //return reProcesarDemandasCaminoOriginal(sublista, red, capacidadEnlace, maxCrosstalk, crosstalkPerUnitLength, 7);
+        boolean block = reProcesarDemandas(listaDemandasR, red, capacidadEnlace, maxCrosstalk, crosstalkPerUnitLength, 7, listaRutasActivas);
+
+      //  boolean block =  reProcesarDemandasCaminoOriginal(sublista, red, capacidadEnlace, maxCrosstalk, crosstalkPerUnitLength, 7);
+        return block;
     }
 
 
@@ -467,9 +485,8 @@ public class Algorithms {
         }
     }
 
-    public static void reProcesarDemandasCaminoOriginal(List<EstablishedRoute> rutas, Graph<Integer, Link> red,
-                                          Integer capacidadEnlance, BigDecimal maxCrosstalk, Double crosstalkPerUnitLength, Integer cores,
-                                          List<EstablishedRoute> listasRutasActivas) {
+    public static boolean reProcesarDemandasCaminoOriginal(List<EstablishedRoute> rutas, Graph<Integer, Link> red,
+                                          Integer capacidadEnlance, BigDecimal maxCrosstalk, Double crosstalkPerUnitLength, Integer cores) {
         List<EstablishedRoute> listaRutasEstablecidas = new ArrayList<>();
         int bloqueos = 0;
         int asigancion = 0;
@@ -482,19 +499,24 @@ public class Algorithms {
             if (rutasEstablecida == null || rutasEstablecida.getFsIndexBegin() == -1) {
                 bloqueos++;
                 System.out.println("Epaaaa. Se produjo bloqueos al reinsertar: " + bloqueos);
+
             } else {
                 // Ruta establecida
                 AssignFsResponse response = Utils.assignFs(red, rutasEstablecida, crosstalkPerUnitLength);
                 rutasEstablecida = response.getRoute();
                 red = response.getGraph();
-                listasRutasActivas.add(rutasEstablecida);
                 asigancion++;
             }
         }
         System.out.println("Cantidad de Bloqueos luego de reruteo es: " + bloqueos);
+
+       if(bloqueos > 0){
+            return false;
+       }
+       return true;
     }
 
-    public static void reProcesarDemandas(List<Demand> demandas, Graph<Integer, Link> red,
+    public static boolean reProcesarDemandas(List<Demand> demandas, Graph<Integer, Link> red,
                                                         Integer capacidadEnlance, BigDecimal maxCrosstalk, Double crosstalkPerUnitLength, Integer cores,
                                                         List<EstablishedRoute> listasRutasActivas) {
         List<EstablishedRoute> listaRutasEstablecidas = new ArrayList<>();
@@ -519,6 +541,12 @@ public class Algorithms {
             }
         }
         System.out.println("Cantidad de Bloqueos luego de reruteo es: " + bloqueos);
+
+        if(bloqueos > 0){
+            return false;
+        }
+
+        return true;
     }
 
     public static EstablishedRoute reRuteo(Graph<Integer, Link> graph, EstablishedRoute ruta, Integer capacity,

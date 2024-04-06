@@ -19,6 +19,7 @@ import py.una.pol.simulador.eon.models.Demand;
 import py.una.pol.simulador.eon.models.EstablishedRoute;
 import py.una.pol.simulador.eon.models.Link;
 import py.una.pol.simulador.eon.models.enums.TopologiesEnum;
+import py.una.pol.simulador.eon.rsa.Algorithms;
 
 /**
  * Utilerías generales
@@ -158,6 +159,11 @@ public class Utils {
      * @return Respuesta de la operación
      */
     public static AssignFsResponse assignFs(Graph<Integer, Link> graph, EstablishedRoute establishedRoute, Double crosstalkPerUnitLength) {
+        Double bfrRedGraphAux = Algorithms.bfrRed(graph, 320, 7);
+        if (bfrRedGraphAux > 0.0){
+            int a = 1;
+        }
+
         for (int j = 0; j < establishedRoute.getPath().size(); j++) {
             for (int i = establishedRoute.getFsIndexBegin(); i < establishedRoute.getFsIndexBegin() + establishedRoute.getFsWidth(); i++) {
                 Integer core = establishedRoute.getPathCores().get(j);

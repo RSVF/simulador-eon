@@ -181,18 +181,26 @@ public class SimulatorTest {
 
                                     // PROCESO DE DESFRAGMENTACION
                                     if(k == 2 && intervalosDeTiempoDF != null && i == desfragmentar && nDF <= input.getDefragmentationCount()) {
+                                        Graph<Integer, Link> graphAux = null;
+                                        graphAux = Utils.createTopology(topology, input.getCores(), input.getFsWidth(), input.getCapacity());
+                                        Double bfrRedGraphAux = Algorithms.bfrRed(graphAux, input.getCapacity(), input.getCores());
 
-                                        // CALCULO DEL BFR ANTES DE LA DESFRAGMENTACION
-                                        Double bfrRed = Algorithms.bfrRed(graph, input.getCapacity(), input.getCores());
-                                        System.out.println("Iniciando proceso de Desfragmentación....: ");
-                                        System.out.println("El BFR de la red antes de la desfragmentación es :" + bfrRed);
-                                        System.out.println("Rutas activas :" + establishedRoutes.size());
-                                        Algorithms.inciarProcesoDesfragmentacion(establishedRoutes, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength);
+                                        if(Algorithms.desfragmentacionFactible(establishedRoutes, graphAux, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength)){
+                                            // CALCULO DEL BFR ANTES DE LA DESFRAGMENTACION
+                                            Double bfrRed = Algorithms.bfrRed(graph, input.getCapacity(), input.getCores());
 
-										// CALCULO DEL BFR LUEGO DE LA DESFRAGMENTACION
-                                        bfrRed = Algorithms.bfrRed(graph, input.getCapacity(), input.getCores());
-                                        System.out.println("El BFR de la red luego de la desfragmentación es :" + bfrRed);
-                                        System.out.println("Rutas activas :" + establishedRoutes.size());
+                                            System.out.println("Iniciando proceso de Desfragmentación....: ");
+                                            System.out.println("El BFR de la red antes de la desfragmentación es :" + bfrRed);
+                                            System.out.println("Rutas activas :" + establishedRoutes.size());
+
+                                            Algorithms.inciarProcesoDesfragmentacion(establishedRoutes, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength);
+
+                                            // CALCULO DEL BFR LUEGO DE LA DESFRAGMENTACION
+                                            bfrRed = Algorithms.bfrRed(graph, input.getCapacity(), input.getCores());
+                                            System.out.println("El BFR de la red luego de la desfragmentación es :" + bfrRed);
+                                            System.out.println("Rutas activas :" + establishedRoutes.size());
+                                        }
+
                                         desfragmentar = desfragmentar + intervalosDeTiempoDF;
                                         System.out.println("TOTAL DE BLOQUEOS: " + bloqueos);
                                         nDF = nDF + 1;
