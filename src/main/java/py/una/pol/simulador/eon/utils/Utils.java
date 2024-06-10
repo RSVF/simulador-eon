@@ -20,24 +20,8 @@ import py.una.pol.simulador.eon.models.EstablishedRoute;
 import py.una.pol.simulador.eon.models.Link;
 import py.una.pol.simulador.eon.models.enums.TopologiesEnum;
 
-/**
- * Utilerías generales
- *
- * @author Néstor E. Reinoso Wood
- */
 public class Utils {
 
-    /**
-     * Creates the graph that represents the optical network
-     *
-     * @param topology Topology selected for the network
-     * @param numberOfCores Quantity of cores in each link
-     * @param fsWidth Width of the frequency slots
-     * @param capacity Quantity of frequency slots in a core
-     * @return Graph that represents the optical network
-     * @throws IOException Error de I/O
-     * @throws IllegalArgumentException Parámetros no válidos
-     */
     public static Graph<Integer, Link> createTopology(TopologiesEnum topology, int numberOfCores,
             BigDecimal fsWidth, Integer capacity)
             throws IOException, IllegalArgumentException {
@@ -262,6 +246,78 @@ public class Utils {
             }
         }
         return vecinos;
+    }
+
+
+    public static Double bfrRuta(EstablishedRoute ruta, Graph<Integer, Link> red, Integer capacidadEnlace) {
+
+        Double sumBfr = 0.0;
+        Integer iEnlace = 0;
+        for (Link link : ruta.getPath()) {
+            // Por cada enlace se inicializa las variables
+            Double bfrEnlace = 0.0;
+            Integer cantFSocupados = 0;
+            Integer auxBloqLibre = 0;
+            Integer maxBloqLibre = 0;
+
+            for (int indiceFs = 0; indiceFs < capacidadEnlace; indiceFs++) {
+
+                Boolean ranuraFS = link.getCores().get(ruta.getPathCores().get(iEnlace)).getFrequencySlots().get(indiceFs).isFree();
+                if (ranuraFS) {
+                    // Si encontramos un elemento ocupado, actualizamos el máximo bloque libre
+                    maxBloqLibre = Math.max(maxBloqLibre, auxBloqLibre);
+                    auxBloqLibre = 0;
+                    cantFSocupados = cantFSocupados + 1;
+                } else {
+                    auxBloqLibre = auxBloqLibre + 1;
+                }
+            }
+            // Se aplica la formula para calcular el BFR en un enlace -->    BFRe = 1 - maxBloqLibre / (N - cantFSocupados))
+            bfrEnlace = 1.0 - ((double) maxBloqLibre / (capacidadEnlace - cantFSocupados));
+            // se va sumando los BFR de cada enlace para posteriormente hallar el promedio según la formula
+            sumBfr = sumBfr + bfrEnlace;
+            iEnlace++;
+        }
+        // se halla el BFRruta
+        Double BFRruta = sumBfr / ruta.getPath().size();
+        return BFRruta;
+    }
+
+
+
+    public static Double bfrRed(Graph<Integer, Link> red, Integer capacidadEnlace, Integer core) {
+        List<Link> listaEnlaces = new ArrayList<>(red.edgeSet());
+        Double sumBfrEnlaceCore = 0.0;
+
+        for (Link enlace : listaEnlaces) {
+            Double sumBfrEnlace = 0.0;
+
+            for (int c = 0; c < core; c++) {
+                Double bfrEnlace = 0.0;
+                Integer cantFSocupados = 0;
+                Integer auxBloqLibre = 0;
+                Integer maxBloqLibre = 0;
+
+                for (int iFs = 0; iFs < capacidadEnlace; iFs++) {
+                    Boolean ranuraFS = enlace.getCores().get(c).getFrequencySlots().get(iFs).isFree();
+                    if (ranuraFS) {
+                        maxBloqLibre = Math.max(maxBloqLibre, auxBloqLibre);
+                        auxBloqLibre = 0;
+                        cantFSocupados++;
+                    } else {
+                        auxBloqLibre++;
+                    }
+                }
+                if (capacidadEnlace - cantFSocupados != 0) {
+                    bfrEnlace = 1.0 - ((double) maxBloqLibre / (capacidadEnlace - cantFSocupados));
+                }
+                sumBfrEnlace += bfrEnlace;
+            }
+            sumBfrEnlaceCore += sumBfrEnlace;
+        }
+        // Verifica que no haya división por cero antes de calcular el promedio
+        Double bfrRed = (listaEnlaces.size() * core > 0) ? sumBfrEnlaceCore / (listaEnlaces.size() * core) : 0.0;
+        return bfrRed;
     }
 
 }
