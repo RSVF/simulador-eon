@@ -62,7 +62,7 @@ public class SimulatorTest {
         input.setLambda(5);
 
         //Volumen de tráfico promedio en cada instante de tiempo
-        input.setErlang(2000);
+        input.setErlang(2500);
 
         //Algoritmos RSA
         input.setAlgorithms(new ArrayList<>());
@@ -95,6 +95,8 @@ public class SimulatorTest {
             Input input = new SimulatorTest().getTestingInput();
             String topologia = Constants.TOPOLOGIA_NSFNET;
             Integer tiempoSimulacion =  input.getSimulationTime();
+            Integer intervalo = 2000;
+            Integer desf = 0;
 
             for (TopologiesEnum topology : input.getTopologies()) {
                 if (topology.toString().equals(topologia)) {
@@ -121,8 +123,18 @@ public class SimulatorTest {
                             int bloqueos = 0;
                             int rutasProcesadas =0;
                             establishedRoutes = new ArrayList<>();
+                            
+
+                            for(int k=1 ; k<=2; k++){
+                                 demandaNumero = 0;
+                                 bloqueos = 0;
+                                 rutasProcesadas =0;
+                                 establishedRoutes = new ArrayList<>();
+                                 graph = Utils.createTopology(topology, input.getCores(), input.getFsWidth(), input.getCapacity());
+
 
                                 for (int i = 0; i < tiempoSimulacion; i++) {
+
                                     //  Demandas a ser transmitidas en el intervalo de tiempo i
                                     List<Demand> demands = listaDemandas.get(i);
                                     for (Demand demand : demands) {
@@ -150,11 +162,9 @@ public class SimulatorTest {
                                             rutasProcesadas++;
                                         }
                                     }
-
                                     for (EstablishedRoute route : establishedRoutes) {
                                         route.subLifeTime();
                                     }
-
                                     for (int ri = 0; ri < establishedRoutes.size(); ri++) {
                                         EstablishedRoute route = establishedRoutes.get(ri);
                                         if (route.getLifetime().equals(0)) {
@@ -164,19 +174,29 @@ public class SimulatorTest {
                                         }
                                     }
 
-                                    if( i == 5000){
-                                        System.out.println("Primera parada para desfragmentar ");
-
-
+                                    if(k ==1 && (i != 0 && i % intervalo == 0 )){
+                                        establishedRoutes = Utils.ordenarRutasFs(establishedRoutes, Constants.ORDER_ASC);
+                                        List<EstablishedRoute> rutasSublist = Utils.obtenerPeoresRutas(establishedRoutes, Constants.PORCENTAJE_100);
+                                        for (EstablishedRoute route : rutasSublist) {
+                                            Utils.deallocateFs(graph, route, crosstalkPerUnitLength);
+                                            establishedRoutes.remove(0);
+                                        }
+                                        List<Demand> demandas = Utils.generarDemandas(rutasSublist);
+                                        reProcesarDemandas(demandas, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength, input.getCores(), establishedRoutes);
+                                        desf =  desf + 1;
                                     }
-
                                 }
                                 System.out.println("Topología utilizada: " + topologia);
                                 System.out.println("Erlangs : " + input.getErlang());
                                 System.out.println("TOTAL DE BLOQUEOS: " + bloqueos);
                                 System.out.println("Cantidad de demandas asignadas: " + rutasProcesadas);
                                 System.out.println("Cantidad de demandas total: " + demandaNumero);
+                                System.out.println("--------------------------------------------------");
+                                System.out.println("Cantidad de desfragmentaciones: " + desf);
                                 System.out.println(System.lineSeparator());
+                            }
+
+
                         }
                     }
                 }
@@ -198,7 +218,7 @@ public class SimulatorTest {
             String dropTable = "DROP TABLE Bloqueos ";
             String sql = "CREATE TABLE IF NOT EXISTS Bloqueos "
                     + "("
-                    + "id INTEGER PRIMARY KEY AUTOINCREMENT, "  // se grega la columna "id"
+                    + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
                     + "erlang TEXT NOT NULL, "
                     + "rsa TEXT NOT NULL, "
                     + " topologia TEXT NOT NULL, "
@@ -239,6 +259,31 @@ public class SimulatorTest {
             System.out.println(e.getClass().getName() + ": " + e.getMessage());
             System.exit(0);
         }
+    }
+
+    public static void reProcesarDemandas(List<Demand> demandas, Graph<Integer, Link> red, Integer capacidadEnlance, BigDecimal maxCrosstalk,
+                                          Double crosstalkPerUnitLength, Integer cores, List<EstablishedRoute> listasRutasActivas) {
+        List<EstablishedRoute> listaRutasEstablecidas = new ArrayList<>();
+        int bloqueos = 0;
+        int asigancion = 0;
+        for (Demand demanda : demandas) {
+            EstablishedRoute rutasEstablecida;
+            // Algoritmo RSA con conmutación de nucleos
+            rutasEstablecida = Algorithms.reRuteoCaminoOriginal(red, demanda, capacidadEnlance, cores, maxCrosstalk, crosstalkPerUnitLength);
+
+            if (rutasEstablecida == null || rutasEstablecida.getFsIndexBegin() == -1) {
+                bloqueos++;
+                System.out.println("Epaa. Se produjo bloqueos al reinsertar: " + bloqueos);
+            } else {
+                // Ruta establecida
+                AssignFsResponse response = Utils.assignFs(red, rutasEstablecida, crosstalkPerUnitLength);
+                rutasEstablecida = response.getRoute();
+                red = response.getGraph();
+                listasRutasActivas.add(rutasEstablecida);
+                asigancion++;
+            }
+        }
+        System.out.println("Cantidad de Bloqueos luego de reruteo es: " + bloqueos);
     }
 }
 

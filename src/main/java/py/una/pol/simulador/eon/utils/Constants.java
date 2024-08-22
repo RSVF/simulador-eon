@@ -3,7 +3,7 @@ package py.una.pol.simulador.eon.utils;
 public class Constants {
     //Topologias
     public static final String TOPOLOGIA_NSFNET = "NSFNET";
-    public static final String TOPOLOGIA_JPNET = "JPNET";
+    public static final String TOPOLOGIA_JPNNET = "JPNNET";
     public static final String TOPOLOGIA_USNET = "USNET";
 
     //Order

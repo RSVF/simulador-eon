@@ -27,7 +27,6 @@ public class Algorithms {
     public static EstablishedRoute ruteoCoreMultiple(Graph<Integer, Link> graph, Demand demand, Integer capacity,
                                                      Integer cores, BigDecimal umbralRuidoMax, Double crosstalkPerUnitLength) {
         int k = 0;
-
         List<GraphPath<Integer, Link>> kspPlaced = new ArrayList<>();
         List<List<Integer>> kspPlacedCores = new ArrayList<>();
         Integer fsIndexBegin = null;
@@ -153,4 +152,84 @@ public class Algorithms {
         }
         return true;
     }
+
+    public static EstablishedRoute reRuteoCaminoOriginal(Graph<Integer, Link> graph, Demand demand, Integer capacity,
+                                                     Integer cores, BigDecimal umbralRuidoMax, Double crosstalkPerUnitLength) {
+        int k = 0;
+        List<GraphPath<Integer, Link>> kspPlaced = new ArrayList<>();
+        List<List<Integer>> kspPlacedCores = new ArrayList<>();
+        Integer fsIndexBegin = null;
+        Integer selectedIndex;
+            List<Link> ksp = demand.getPath();
+            // RECORRIDO DE LOS FS
+            for (int indiceFS = 0; indiceFS <= capacity - demand.getFs(); indiceFS++) {
+                List<Link> enlacesLibres = new ArrayList<>();
+                List<Integer> kspCores = new ArrayList<>();
+                List<BigDecimal> crosstalkFSList = new ArrayList<>();
+
+                for (int fsCrosstalkIndex = 0; fsCrosstalkIndex < demand.getFs(); fsCrosstalkIndex++) {
+                    crosstalkFSList.add(BigDecimal.ZERO);
+                }
+
+                // RECORRIDO DE LOS ENLACES (RED)
+                for (Link link : ksp) {
+                    // RECORRIDO DE LOS CORES
+                    for (int core = 0; core < cores; core++) {
+
+                        // OBTIENE EL BLOQUE DE FS (RED)
+                        List<FrequencySlot> bloqueFS = link.getCores().get(core).getFrequencySlots().subList(indiceFS,
+                                indiceFS + demand.getFs());
+
+                        // CONTROLA SI ESTA OCUPADO POR UNA DEMANDA
+                        if (isFSBlockFree(bloqueFS)) {
+
+                            // CONTROL DE RUIDO
+
+                            if (esBloqueFsMayorUmbralRuido(bloqueFS, umbralRuidoMax, crosstalkFSList)) {
+
+                                // CONTROL DE RUIDO EN LOS NUCLEOS VECINOS
+                                if (isNextToCrosstalkFreeCores(link, umbralRuidoMax, core, indiceFS, demand.getFs(),
+                                        crosstalkPerUnitLength)) {
+
+                                    enlacesLibres.add(link);
+                                    kspCores.add(core);
+                                    fsIndexBegin = indiceFS;
+                                    selectedIndex = k;
+                                    for (int crosstalkFsListIndex = 0; crosstalkFsListIndex < crosstalkFSList.size(); crosstalkFsListIndex++) {
+
+                                        BigDecimal crosstalkRuta = crosstalkFSList.get(crosstalkFsListIndex);
+                                        crosstalkRuta = crosstalkRuta.add(Utils.toDB(Utils.XT(Utils.getCantidadVecinos(core),
+                                                crosstalkPerUnitLength, link.getDistance())));
+
+                                        crosstalkFSList.set(crosstalkFsListIndex, crosstalkRuta);
+                                    }
+                                    core = cores;
+                                    // Si todos los enlaces tienen el mismo bloque de FS libre, se agrega la ruta a
+                                    // la lista de rutas establecidas.
+                                    if (enlacesLibres.size() == ksp.size()) {
+                                        kspPlacedCores.add(kspCores);
+                                        indiceFS = capacity;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+        EstablishedRoute establisedRoute;
+        if (fsIndexBegin != null && !kspPlacedCores.isEmpty()) {
+            establisedRoute = new EstablishedRoute(ksp, fsIndexBegin, demand.getFs(),
+                    demand.getLifetime(), demand.getSource(), demand.getDestination(), kspPlacedCores.get(0));
+        } else {
+            // System.out.println("Bloqueo");
+            establisedRoute = null;
+        }
+        return establisedRoute;
+
+    }
+
+
+
+
 }

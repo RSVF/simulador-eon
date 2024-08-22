@@ -8,22 +8,24 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.*;
+
 import org.jgrapht.Graph;
 import org.jgrapht.graph.SimpleWeightedGraph;
-import py.una.pol.simulador.eon.models.AssignFsResponse;
-import py.una.pol.simulador.eon.models.Core;
-import py.una.pol.simulador.eon.models.Demand;
-import py.una.pol.simulador.eon.models.EstablishedRoute;
-import py.una.pol.simulador.eon.models.Link;
+import py.una.pol.simulador.eon.models.*;
+import py.una.pol.simulador.eon.models.enums.RSAEnum;
 import py.una.pol.simulador.eon.models.enums.TopologiesEnum;
+import py.una.pol.simulador.eon.rsa.Algorithms;
 
 public class Utils {
 
+
     public static Graph<Integer, Link> createTopology(TopologiesEnum topology, int numberOfCores,
-            BigDecimal fsWidth, Integer capacity)
+                                                      BigDecimal fsWidth, Integer capacity)
             throws IOException, IllegalArgumentException {
 
         ObjectMapper objectMapper = new ObjectMapper();
@@ -82,7 +84,7 @@ public class Utils {
                 destination = rand.nextInt(cantNodos);
             }
             Integer tLife = MathUtils.getLifetime(HT);
-            demands.add(new Demand(j, source, destination, fs, tLife, false, insertionTime));
+            demands.add(new Demand(j, source, destination, fs, tLife, false, insertionTime, null));
         }
         return demands;
     }
@@ -248,7 +250,6 @@ public class Utils {
         return vecinos;
     }
 
-
     public static Double bfrRuta(EstablishedRoute ruta, Graph<Integer, Link> red, Integer capacidadEnlace) {
 
         Double sumBfr = 0.0;
@@ -320,4 +321,39 @@ public class Utils {
         return bfrRed;
     }
 
+    public static List<Demand> generarDemandas(List<EstablishedRoute> establishedRoutes){
+        List<Demand> demands = new ArrayList<Demand>();
+        for (EstablishedRoute establishedRoute : establishedRoutes) {
+            Integer id = null; // Asignar un ID adecuado si es necesario, aquí está como null
+            Integer source = establishedRoute.getFrom();
+            Integer destination = establishedRoute.getTo();
+            Integer fs = establishedRoute.getFsWidth();
+            Integer lifetime = establishedRoute.getLifetime();
+            Boolean blocked = false;
+            Integer insertionTime = null;
+            List<Link> path = establishedRoute.getPath();
+
+            // Crear una nueva demanda con la información extraída
+            Demand demand = new Demand(id, source, destination, fs, lifetime, blocked, insertionTime, path);
+            demands.add(demand);
+        }
+        return demands;
+        }
+
+    public static List<EstablishedRoute> ordenarRutasFs(List<EstablishedRoute> rutas, String order) {
+        List<EstablishedRoute> sortedRoutes = new ArrayList<>(rutas);
+
+        if (order.equals(Constants.ORDER_ASC)) {
+            Collections.sort(sortedRoutes, Comparator.comparingInt(EstablishedRoute::getFsWidth));
+        } else {
+            Collections.sort(sortedRoutes, Comparator.comparingInt(EstablishedRoute::getFsWidth).reversed());
+        }
+        return sortedRoutes;
+    }
+
+    public static List<EstablishedRoute> obtenerPeoresRutas(List<EstablishedRoute> rutas, Double porcentaje) {
+       int sizeSublist = (int)(rutas.size() * porcentaje);
+       List<EstablishedRoute> subList = new ArrayList<>(rutas.subList(0, sizeSublist));
+       return subList;
+    }
 }

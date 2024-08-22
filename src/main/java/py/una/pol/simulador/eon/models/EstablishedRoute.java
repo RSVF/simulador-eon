@@ -1,8 +1,10 @@
 package py.una.pol.simulador.eon.models;
 
-import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+
+import java.util.List;
+
 
 /**
  * Ruta establecida por un algoritmo RSA
