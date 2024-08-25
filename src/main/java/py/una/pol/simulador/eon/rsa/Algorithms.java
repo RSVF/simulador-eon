@@ -104,7 +104,7 @@ public class Algorithms {
         EstablishedRoute establisedRoute;
         if (fsIndexBegin != null && !kspPlaced.isEmpty()) {
             establisedRoute = new EstablishedRoute(kspPlaced.get(0).getEdgeList(), fsIndexBegin, demand.getFs(),
-                    demand.getLifetime(), demand.getSource(), demand.getDestination(), kspPlacedCores.get(0));
+                    demand.getLifetime(), demand.getSource(), demand.getDestination(), kspPlacedCores.get(0), null, null);
         } else {
             // System.out.println("Bloqueo");
             establisedRoute = null;
@@ -220,7 +220,7 @@ public class Algorithms {
         EstablishedRoute establisedRoute;
         if (fsIndexBegin != null && !kspPlacedCores.isEmpty()) {
             establisedRoute = new EstablishedRoute(ksp, fsIndexBegin, demand.getFs(),
-                    demand.getLifetime(), demand.getSource(), demand.getDestination(), kspPlacedCores.get(0));
+                    demand.getLifetime(), demand.getSource(), demand.getDestination(), kspPlacedCores.get(0), null, null);
         } else {
             // System.out.println("Bloqueo");
             establisedRoute = null;
@@ -228,8 +228,5 @@ public class Algorithms {
         return establisedRoute;
 
     }
-
-
-
 
 }

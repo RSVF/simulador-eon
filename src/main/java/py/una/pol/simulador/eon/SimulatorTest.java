@@ -11,6 +11,8 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import org.jgrapht.Graph;
 import py.una.pol.simulador.eon.models.AssignFsResponse;
@@ -62,7 +64,7 @@ public class SimulatorTest {
         input.setLambda(5);
 
         //Volumen de tráfico promedio en cada instante de tiempo
-        input.setErlang(2500);
+        input.setErlang(1800);
 
         //Algoritmos RSA
         input.setAlgorithms(new ArrayList<>());
@@ -93,7 +95,7 @@ public class SimulatorTest {
         try {
             createTableBloqueos();
             Input input = new SimulatorTest().getTestingInput();
-            String topologia = Constants.TOPOLOGIA_NSFNET;
+            String topologia = Constants.TOPOLOGIA_JPNNET;
             Integer tiempoSimulacion =  input.getSimulationTime();
             Integer intervalo = 2000;
             Integer desf = 0;
@@ -174,13 +176,19 @@ public class SimulatorTest {
                                         }
                                     }
 
-                                    if(k ==1 && (i != 0 && i % intervalo == 0 )){
-                                        establishedRoutes = Utils.ordenarRutasFs(establishedRoutes, Constants.ORDER_ASC);
+                                    if(k ==2 && (i != 0 && i % intervalo == 0 )){
+                                       //calcularBfrRutasActivas(establishedRoutes, graph, input.getCapacity());
+                                       //ordenarPorBfrRutaDesc(establishedRoutes); // se ordena de forma descendente, es decir de la ruta mas fragmentada a la menos fragmentada
                                         List<EstablishedRoute> rutasSublist = Utils.obtenerPeoresRutas(establishedRoutes, Constants.PORCENTAJE_100);
-                                        for (EstablishedRoute route : rutasSublist) {
-                                            Utils.deallocateFs(graph, route, crosstalkPerUnitLength);
+                                        rutasSublist = Utils.ordenarRutasFs(rutasSublist, Constants.ORDER_ASC);
+
+                                        int eliminado = 0;
+                                        while (eliminado < rutasSublist.size()){
+                                            Utils.deallocateFs(graph, establishedRoutes.get(0), crosstalkPerUnitLength);
                                             establishedRoutes.remove(0);
+                                            eliminado++;
                                         }
+
                                         List<Demand> demandas = Utils.generarDemandas(rutasSublist);
                                         reProcesarDemandas(demandas, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength, input.getCores(), establishedRoutes);
                                         desf =  desf + 1;
@@ -284,6 +292,27 @@ public class SimulatorTest {
             }
         }
         System.out.println("Cantidad de Bloqueos luego de reruteo es: " + bloqueos);
+    }
+
+
+    public static List<EstablishedRoute> calcularBfrRutasActivas(List<EstablishedRoute> listaRutasActivas, Graph<Integer, Link> red, Integer capacidadEnlace){
+        for (int ra = 0; ra < listaRutasActivas.size(); ra++) {
+            EstablishedRoute rutaActiva = listaRutasActivas.get(ra);
+            Double bfrRuta = Utils.bfrRuta(rutaActiva, red, capacidadEnlace);
+            rutaActiva.setBfrRuta(bfrRuta);
+        }
+        return listaRutasActivas;
+    }
+
+
+    public static List<EstablishedRoute> ordenarPorBfrRutaDesc(List<EstablishedRoute> rutas) {
+        Collections.sort(rutas, new Comparator<EstablishedRoute>() {
+            @Override
+            public int compare(EstablishedRoute r1, EstablishedRoute r2) {
+                return r2.getBfrRuta().compareTo(r1.getBfrRuta());
+            }
+        });
+        return rutas;
     }
 }
 
