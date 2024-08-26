@@ -64,7 +64,7 @@ public class SimulatorTest {
         input.setLambda(5);
 
         //Volumen de tráfico promedio en cada instante de tiempo
-        input.setErlang(1800);
+        input.setErlang(1400);
 
         //Algoritmos RSA
         input.setAlgorithms(new ArrayList<>());
@@ -180,7 +180,7 @@ public class SimulatorTest {
                                        //calcularBfrRutasActivas(establishedRoutes, graph, input.getCapacity());
                                        //ordenarPorBfrRutaDesc(establishedRoutes); // se ordena de forma descendente, es decir de la ruta mas fragmentada a la menos fragmentada
                                         List<EstablishedRoute> rutasSublist = Utils.obtenerPeoresRutas(establishedRoutes, Constants.PORCENTAJE_100);
-                                        rutasSublist = Utils.ordenarRutasFs(rutasSublist, Constants.ORDER_ASC);
+                                        rutasSublist = Utils.ordenarRutasFsLt(rutasSublist, Constants.ORDER_ASC);
 
                                         int eliminado = 0;
                                         while (eliminado < rutasSublist.size()){
@@ -190,7 +190,8 @@ public class SimulatorTest {
                                         }
 
                                         List<Demand> demandas = Utils.generarDemandas(rutasSublist);
-                                        reProcesarDemandas(demandas, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength, input.getCores(), establishedRoutes);
+                                        //reProcesarDemandas(demandas, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength, input.getCores(), establishedRoutes);
+                                        reProcesarDemandasRSA(demandas, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength, input.getCores(), establishedRoutes);
                                         desf =  desf + 1;
                                     }
                                 }
@@ -294,6 +295,31 @@ public class SimulatorTest {
         System.out.println("Cantidad de Bloqueos luego de reruteo es: " + bloqueos);
     }
 
+
+    public static void reProcesarDemandasRSA(List<Demand> demandas, Graph<Integer, Link> red, Integer capacidadEnlance, BigDecimal maxCrosstalk,
+                                          Double crosstalkPerUnitLength, Integer cores, List<EstablishedRoute> listasRutasActivas) {
+        List<EstablishedRoute> listaRutasEstablecidas = new ArrayList<>();
+        int bloqueos = 0;
+        int asigancion = 0;
+        for (Demand demanda : demandas) {
+            EstablishedRoute rutasEstablecida;
+            // Algoritmo RSA con conmutación de nucleos
+            rutasEstablecida = Algorithms.ruteoCoreMultiple(red, demanda, capacidadEnlance, cores, maxCrosstalk, crosstalkPerUnitLength);
+
+            if (rutasEstablecida == null || rutasEstablecida.getFsIndexBegin() == -1) {
+                bloqueos++;
+                System.out.println("Epaa. Se produjo bloqueos al reinsertar: " + bloqueos);
+            } else {
+                // Ruta establecida
+                AssignFsResponse response = Utils.assignFs(red, rutasEstablecida, crosstalkPerUnitLength);
+                rutasEstablecida = response.getRoute();
+                red = response.getGraph();
+                listasRutasActivas.add(rutasEstablecida);
+                asigancion++;
+            }
+        }
+        System.out.println("Cantidad de Bloqueos luego de reruteo es: " + bloqueos);
+    }
 
     public static List<EstablishedRoute> calcularBfrRutasActivas(List<EstablishedRoute> listaRutasActivas, Graph<Integer, Link> red, Integer capacidadEnlace){
         for (int ra = 0; ra < listaRutasActivas.size(); ra++) {

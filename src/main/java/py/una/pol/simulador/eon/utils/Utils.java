@@ -351,6 +351,22 @@ public class Utils {
         return sortedRoutes;
     }
 
+    public static List<EstablishedRoute> ordenarRutasFsLt(List<EstablishedRoute> rutas, String order) {
+        List<EstablishedRoute> sortedRoutes = new ArrayList<>(rutas);
+
+        Comparator<EstablishedRoute> comparator = Comparator
+                .comparingInt(EstablishedRoute::getFsWidth)
+                .thenComparingInt(EstablishedRoute::getLifetime);
+
+        if (order.equals(Constants.ORDER_DESC)) {
+            comparator = comparator.reversed();
+        }
+
+        Collections.sort(sortedRoutes, comparator);
+        return sortedRoutes;
+    }
+
+
     public static List<EstablishedRoute> obtenerPeoresRutas(List<EstablishedRoute> rutas, Double porcentaje) {
        int sizeSublist = (int)(rutas.size() * porcentaje);
        List<EstablishedRoute> subList = new ArrayList<>(rutas.subList(0, sizeSublist));
