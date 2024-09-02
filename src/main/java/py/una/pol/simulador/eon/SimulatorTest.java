@@ -64,7 +64,7 @@ public class SimulatorTest {
         input.setLambda(5);
 
         //Volumen de tráfico promedio en cada instante de tiempo
-        input.setErlang(1400);
+        input.setErlang(3000);
 
         //Algoritmos RSA
         input.setAlgorithms(new ArrayList<>());
@@ -95,9 +95,9 @@ public class SimulatorTest {
         try {
             createTableBloqueos();
             Input input = new SimulatorTest().getTestingInput();
-            String topologia = Constants.TOPOLOGIA_JPNNET;
+            String topologia = Constants.TOPOLOGIA_NSFNET;
             Integer tiempoSimulacion =  input.getSimulationTime();
-            Integer intervalo = 2000;
+            Integer intervalo = 1000;
             Integer desf = 0;
 
             for (TopologiesEnum topology : input.getTopologies()) {
@@ -190,8 +190,8 @@ public class SimulatorTest {
                                         }
 
                                         List<Demand> demandas = Utils.generarDemandas(rutasSublist);
-                                        //reProcesarDemandas(demandas, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength, input.getCores(), establishedRoutes);
-                                        reProcesarDemandasRSA(demandas, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength, input.getCores(), establishedRoutes);
+                                        reProcesarDemandas(demandas, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength, input.getCores(), establishedRoutes);
+                                       // reProcesarDemandasRSA(demandas, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength, input.getCores(), establishedRoutes);
                                         desf =  desf + 1;
                                     }
                                 }
