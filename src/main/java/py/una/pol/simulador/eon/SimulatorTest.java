@@ -14,12 +14,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.zip.Inflater;
+
 import org.jgrapht.Graph;
-import py.una.pol.simulador.eon.models.AssignFsResponse;
-import py.una.pol.simulador.eon.models.Demand;
-import py.una.pol.simulador.eon.models.EstablishedRoute;
-import py.una.pol.simulador.eon.models.Input;
-import py.una.pol.simulador.eon.models.Link;
+import py.una.pol.simulador.eon.models.*;
 import py.una.pol.simulador.eon.models.enums.RSAEnum;
 import py.una.pol.simulador.eon.models.enums.TopologiesEnum;
 import py.una.pol.simulador.eon.rsa.Algorithms;
@@ -28,7 +26,6 @@ import py.una.pol.simulador.eon.utils.MathUtils;
 import py.una.pol.simulador.eon.utils.Utils;
 
 /**
- *
  * @author Néstor E. Reinoso Wood
  */
 public class SimulatorTest {
@@ -64,7 +61,7 @@ public class SimulatorTest {
         input.setLambda(5);
 
         //Volumen de tráfico promedio en cada instante de tiempo
-        input.setErlang(3000);
+        input.setErlang(2500);
 
         //Algoritmos RSA
         input.setAlgorithms(new ArrayList<>());
@@ -96,7 +93,8 @@ public class SimulatorTest {
             createTableBloqueos();
             Input input = new SimulatorTest().getTestingInput();
             String topologia = Constants.TOPOLOGIA_NSFNET;
-            Integer tiempoSimulacion =  input.getSimulationTime();
+            String tipoDesframentacion = Constants.DESFRAGMENTACION_PUSH_PULL;
+            Integer tiempoSimulacion = input.getSimulationTime();
             Integer intervalo = 1000;
             Integer desf = 0;
 
@@ -123,16 +121,16 @@ public class SimulatorTest {
                                     + crosstalkPerUnitLength.toString());
                             int demandaNumero = 0;
                             int bloqueos = 0;
-                            int rutasProcesadas =0;
+                            int rutasProcesadas = 0;
                             establishedRoutes = new ArrayList<>();
-                            
 
-                            for(int k=1 ; k<=2; k++){
-                                 demandaNumero = 0;
-                                 bloqueos = 0;
-                                 rutasProcesadas =0;
-                                 establishedRoutes = new ArrayList<>();
-                                 graph = Utils.createTopology(topology, input.getCores(), input.getFsWidth(), input.getCapacity());
+
+                            for (int k = 1; k <= 2; k++) {
+                                demandaNumero = 0;
+                                bloqueos = 0;
+                                rutasProcesadas = 0;
+                                establishedRoutes = new ArrayList<>();
+                                graph = Utils.createTopology(topology, input.getCores(), input.getFsWidth(), input.getCapacity());
 
 
                                 for (int i = 0; i < tiempoSimulacion; i++) {
@@ -176,24 +174,31 @@ public class SimulatorTest {
                                         }
                                     }
 
-                                    if(k ==2 && (i != 0 && i % intervalo == 0 )){
-                                       //calcularBfrRutasActivas(establishedRoutes, graph, input.getCapacity());
-                                       //ordenarPorBfrRutaDesc(establishedRoutes); // se ordena de forma descendente, es decir de la ruta mas fragmentada a la menos fragmentada
-                                        List<EstablishedRoute> rutasSublist = Utils.obtenerPeoresRutas(establishedRoutes, Constants.PORCENTAJE_100);
-                                        rutasSublist = Utils.ordenarRutasFsLt(rutasSublist, Constants.ORDER_ASC);
+                                    if (k == 1 && (i != 0 && i % intervalo == 0)) {
+                                        if (Constants.DESFRAGMENTACION_PUSH_PULL == tipoDesframentacion) {
+                                            desfragmentacionPushPull(establishedRoutes, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength);
 
-                                        int eliminado = 0;
-                                        while (eliminado < rutasSublist.size()){
-                                            Utils.deallocateFs(graph, establishedRoutes.get(0), crosstalkPerUnitLength);
-                                            establishedRoutes.remove(0);
-                                            eliminado++;
+                                        } else {
+                                            calcularBfrRutasActivas(establishedRoutes, graph, input.getCapacity());
+                                            ordenarPorBfrRutaDesc(establishedRoutes); // se ordena de forma descendente, es decir de la ruta mas fragmentada a la menos fragmentada
+                                            List<EstablishedRoute> rutasSublist = Utils.obtenerPeoresRutas(establishedRoutes, Constants.PORCENTAJE_100);
+                                            rutasSublist = Utils.ordenarRutasFsLt(rutasSublist, Constants.ORDER_ASC);
+                                            rutasSublist = Utils.ordenarRutasDistFs(rutasSublist, Constants.ORDER_ASC);
+                                            int eliminado = 0;
+                                            while (eliminado < rutasSublist.size()) {
+                                                Utils.deallocateFs(graph, establishedRoutes.get(0), crosstalkPerUnitLength);
+                                                establishedRoutes.remove(0);
+                                                eliminado++;
+                                            }
+                                            List<Demand> demandas = Utils.generarDemandas(rutasSublist);
+                                            reProcesarDemandas(demandas, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength, input.getCores(), establishedRoutes);
+                                            // reProcesarDemandasRSA(demandas, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength, input.getCores(), establishedRoutes);
                                         }
 
-                                        List<Demand> demandas = Utils.generarDemandas(rutasSublist);
-                                        reProcesarDemandas(demandas, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength, input.getCores(), establishedRoutes);
-                                       // reProcesarDemandasRSA(demandas, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength, input.getCores(), establishedRoutes);
-                                        desf =  desf + 1;
+                                        desf = desf + 1;
                                     }
+
+
                                 }
                                 System.out.println("Topología utilizada: " + topologia);
                                 System.out.println("Erlangs : " + input.getErlang());
@@ -297,7 +302,7 @@ public class SimulatorTest {
 
 
     public static void reProcesarDemandasRSA(List<Demand> demandas, Graph<Integer, Link> red, Integer capacidadEnlance, BigDecimal maxCrosstalk,
-                                          Double crosstalkPerUnitLength, Integer cores, List<EstablishedRoute> listasRutasActivas) {
+                                             Double crosstalkPerUnitLength, Integer cores, List<EstablishedRoute> listasRutasActivas) {
         List<EstablishedRoute> listaRutasEstablecidas = new ArrayList<>();
         int bloqueos = 0;
         int asigancion = 0;
@@ -321,7 +326,7 @@ public class SimulatorTest {
         System.out.println("Cantidad de Bloqueos luego de reruteo es: " + bloqueos);
     }
 
-    public static List<EstablishedRoute> calcularBfrRutasActivas(List<EstablishedRoute> listaRutasActivas, Graph<Integer, Link> red, Integer capacidadEnlace){
+    public static List<EstablishedRoute> calcularBfrRutasActivas(List<EstablishedRoute> listaRutasActivas, Graph<Integer, Link> red, Integer capacidadEnlace) {
         for (int ra = 0; ra < listaRutasActivas.size(); ra++) {
             EstablishedRoute rutaActiva = listaRutasActivas.get(ra);
             Double bfrRuta = Utils.bfrRuta(rutaActiva, red, capacidadEnlace);
@@ -340,5 +345,88 @@ public class SimulatorTest {
         });
         return rutas;
     }
-}
 
+
+    public static void desfragmentacionPushPull(List<EstablishedRoute> rutas, Graph<Integer, Link> red, Integer capacidadEnlance, BigDecimal umbralRuidoMax, Double crosstalkPerUnitLength) {
+
+        for (EstablishedRoute ruta : rutas) {
+            if (ruta.getFsIndexBegin() != 0) {
+                Integer FSindexBeginDF = verificarMovFsIzq(ruta, red);
+                if (FSindexBeginDF != ruta.getFsIndexBegin()) {
+                    ruta.setFsIndexBeginDf(FSindexBeginDF);
+                    ruta.setLifetimeDf(ruta.getLifetime());
+                    // Se desintala de red ya que hay lugar para mover mas hacia la izquierda
+                    Utils.deallocateFs(red, ruta, crosstalkPerUnitLength);
+                    // Antes de asignar a la red en los nuevos lugares se debe controlar el ruido antes de la insersion
+                    if (controlRuidoDF(red, ruta, umbralRuidoMax, crosstalkPerUnitLength)) {
+                        // se recuperar el tiempo de vida y se indica en indice nuevo del fs
+                        ruta.setFsIndexBegin(FSindexBeginDF);
+                    }
+                    ruta.setLifetime(ruta.getLifetimeDf());
+                    Utils.assignFs(red, ruta, crosstalkPerUnitLength);
+                }
+            }
+        }
+    }
+
+    public static Integer verificarMovFsIzq(EstablishedRoute ruta, Graph<Integer, Link> red) {
+
+        List<Link> enlacesRuta = ruta.getPath();
+        Integer FSindexBegin = ruta.getFsIndexBegin();
+
+        List<Integer> ultimosLibres = new ArrayList<>();
+
+        // Iterar sobre cada enlace de la ruta
+        for (int i = 0; i < enlacesRuta.size(); i++) {
+            List<FrequencySlot> ranurasFS = enlacesRuta.get(i).getCores().get(i).getFrequencySlots();
+            Integer ultimoFSLibreEnlacei = FSindexBegin;
+            for (int fs = FSindexBegin - 1; fs >= 0; fs--) {
+                if (ranurasFS.get(fs).isFree()) {
+                    ultimoFSLibreEnlacei = fs;
+                } else {
+                    break;
+                }
+            }
+            ultimosLibres.add(ultimoFSLibreEnlacei);
+        }
+        return Collections.max(ultimosLibres);
+    }
+
+
+    public static boolean controlRuidoDF(Graph<Integer, Link> red, EstablishedRoute ruta, BigDecimal umbralRuidoMax, Double crosstalkPerUnitLength) {
+        Boolean puedeAsignar = false;
+        List<Link> enlacesRuta = ruta.getPath();
+        List<Integer> coresRuta = ruta.getPathCores();
+        Integer FSindexBeginDF = ruta.getFsIndexBegin();
+        Integer FSruta = ruta.getFsWidth();
+        List<BigDecimal> crosstalkFSList = new ArrayList<>();
+
+        for (int fsCrosstalkIndex = 0; fsCrosstalkIndex < FSruta; fsCrosstalkIndex++) {
+            crosstalkFSList.add(BigDecimal.ZERO);
+        }
+
+        // Iterar sobre cada enlace de la ruta
+        for (int i = 0; i < enlacesRuta.size(); i++) {
+
+            List<FrequencySlot> bloqueFS = enlacesRuta.get(i).getCores().get(i).getFrequencySlots().subList(FSindexBeginDF,
+                    FSindexBeginDF + FSruta);
+
+            if (Algorithms.esBloqueFsMayorUmbralRuido(bloqueFS, umbralRuidoMax, crosstalkFSList)) {
+                // CONTROL DE RUIDO EN LOS NUCLEOS VECINOS
+                if (Algorithms.isNextToCrosstalkFreeCores(enlacesRuta.get(i), umbralRuidoMax, coresRuta.get(i), FSindexBeginDF, FSruta, crosstalkPerUnitLength)) {
+                    for (int crosstalkFsListIndex = 0; crosstalkFsListIndex < crosstalkFSList.size(); crosstalkFsListIndex++) {
+                        BigDecimal crosstalkRuta = crosstalkFSList.get(crosstalkFsListIndex);
+                        crosstalkRuta = crosstalkRuta.add(Utils.toDB(Utils.XT(Utils.getCantidadVecinos(coresRuta.get(i)),
+                                crosstalkPerUnitLength, enlacesRuta.get(i).getDistance())));
+                        crosstalkFSList.set(crosstalkFsListIndex, crosstalkRuta);
+                    }
+
+                    if (i == enlacesRuta.size() - 1) {
+                        puedeAsignar = true;
+                    }
+                }
+            }
+        }
+        return puedeAsignar;
+    }
+}

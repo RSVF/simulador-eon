@@ -103,8 +103,9 @@ public class Algorithms {
         }
         EstablishedRoute establisedRoute;
         if (fsIndexBegin != null && !kspPlaced.isEmpty()) {
-            establisedRoute = new EstablishedRoute(kspPlaced.get(0).getEdgeList(), fsIndexBegin, demand.getFs(),
-                    demand.getLifetime(), demand.getSource(), demand.getDestination(), kspPlacedCores.get(0), null, null);
+
+            establisedRoute = new EstablishedRoute(kspPlaced.get(0).getEdgeList(), fsIndexBegin, demand.getFs(), demand.getLifetime(), demand.getSource(),
+                    demand.getDestination(), kspPlacedCores.get(0), null, kspPlaced.get(0).getWeight(), null, null);
         } else {
             // System.out.println("Bloqueo");
             establisedRoute = null;
@@ -113,8 +114,8 @@ public class Algorithms {
 
     }
 
-    private static Boolean esBloqueFsMayorUmbralRuido(List<FrequencySlot> bloqueFS, BigDecimal umbralRuidoMax,
-                                                      List<BigDecimal> crosstalkRuta) {
+    public static Boolean esBloqueFsMayorUmbralRuido(List<FrequencySlot> bloqueFS, BigDecimal umbralRuidoMax,
+                                                     List<BigDecimal> crosstalkRuta) {
         // ESTA PORCIÓN DE CODIGO CONTROLA SI EL BLOQUE DE FS TIENE RUIDO QUE SUPERE EL
         // UMBRAL DE RUIDO MÁXIMO
         for (int i = 0; i < bloqueFS.size(); i++) {
@@ -135,7 +136,7 @@ public class Algorithms {
         return true;
     }
 
-    private static Boolean isNextToCrosstalkFreeCores(Link link, BigDecimal maxCrosstalk, Integer core, Integer fsIndexBegin, Integer fsWidth, Double crosstalkPerUnitLength) {
+    public static Boolean isNextToCrosstalkFreeCores(Link link, BigDecimal maxCrosstalk, Integer core, Integer fsIndexBegin, Integer fsWidth, Double crosstalkPerUnitLength) {
         List<Integer> vecinos = Utils.getCoreVecinos(core);
         for (Integer coreVecino : vecinos) {
             for (Integer i = fsIndexBegin; i < fsIndexBegin + fsWidth; i++) {
@@ -219,8 +220,12 @@ public class Algorithms {
 
         EstablishedRoute establisedRoute;
         if (fsIndexBegin != null && !kspPlacedCores.isEmpty()) {
+            Double distancia = 0.0;
+            for (Link link : ksp) {
+                distancia = distancia + link.getDistance();
+            }
             establisedRoute = new EstablishedRoute(ksp, fsIndexBegin, demand.getFs(),
-                    demand.getLifetime(), demand.getSource(), demand.getDestination(), kspPlacedCores.get(0), null, null);
+                    demand.getLifetime(), demand.getSource(), demand.getDestination(), kspPlacedCores.get(0), null, distancia, null, null);
         } else {
             // System.out.println("Bloqueo");
             establisedRoute = null;

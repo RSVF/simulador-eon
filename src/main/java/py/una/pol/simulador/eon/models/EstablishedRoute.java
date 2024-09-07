@@ -47,6 +47,8 @@ public class EstablishedRoute {
     private Double bfrRuta;
 
     private Double dijkstra;
+    private Integer fsIndexBeginDf;
+    private Integer lifetimeDf;
 
     /**
      * Constructor vacío
@@ -67,7 +69,8 @@ public class EstablishedRoute {
      * @param bfrRuta el bfr de la ruta activa
      * @param dijkstra distancia de la ruta activa en la red (desde el nodo origen hasta el nodo destino)
      */
-    public EstablishedRoute(List<Link> path, Integer fsIndexBegin, Integer fsWidth, Integer lifetime, Integer from, Integer to, List<Integer> pathCores, Double bfrRuta, Double dijkstra) {
+    public EstablishedRoute(List<Link> path, Integer fsIndexBegin, Integer fsWidth, Integer lifetime, Integer from, Integer to, List<Integer> pathCores,
+                            Double bfrRuta, Double dijkstra, Integer fsIndexBeginDf, Integer lifetimeDf) {
         this.path = path;
         this.fsIndexBegin = fsIndexBegin;
         this.fsWidth = fsWidth;
@@ -77,6 +80,8 @@ public class EstablishedRoute {
         this.pathCores = pathCores;
         this.bfrRuta = bfrRuta;
         this.dijkstra = dijkstra;
+        this.fsIndexBeginDf = fsIndexBeginDf;
+        this.lifetimeDf = lifetimeDf;
     }
 
     /**
