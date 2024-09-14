@@ -92,8 +92,8 @@ public class SimulatorTest {
         try {
             createTableBloqueos();
             Input input = new SimulatorTest().getTestingInput();
-            String topologia = Constants.TOPOLOGIA_NSFNET;
-            String tipoDesframentacion = Constants.DESFRAGMENTACION_PUSH_PULL;
+            String topologia = Constants.TOPOLOGIA_JPNNET;
+            String tipoDesframentacion = Constants.DESFRAGMENTACION_EMPIRICA;
             Integer tiempoSimulacion = input.getSimulationTime();
             Integer intervalo = 1000;
             Integer desf = 0;
@@ -179,11 +179,13 @@ public class SimulatorTest {
                                             desfragmentacionPushPull(establishedRoutes, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength);
 
                                         } else {
+                                            Double bfRedBefore = Utils.bfrRed(graph, input.getCapacity(),7);
+                                            System.out.println("Bfr red inicial: " + bfRedBefore);
                                             calcularBfrRutasActivas(establishedRoutes, graph, input.getCapacity());
                                             ordenarPorBfrRutaDesc(establishedRoutes); // se ordena de forma descendente, es decir de la ruta mas fragmentada a la menos fragmentada
                                             List<EstablishedRoute> rutasSublist = Utils.obtenerPeoresRutas(establishedRoutes, Constants.PORCENTAJE_100);
                                             rutasSublist = Utils.ordenarRutasFsLt(rutasSublist, Constants.ORDER_ASC);
-                                            rutasSublist = Utils.ordenarRutasDistFs(rutasSublist, Constants.ORDER_ASC);
+                                           // rutasSublist = Utils.ordenarRutasDistFs(rutasSublist, Constants.ORDER_ASC);
                                             int eliminado = 0;
                                             while (eliminado < rutasSublist.size()) {
                                                 Utils.deallocateFs(graph, establishedRoutes.get(0), crosstalkPerUnitLength);
@@ -193,6 +195,8 @@ public class SimulatorTest {
                                             List<Demand> demandas = Utils.generarDemandas(rutasSublist);
                                             reProcesarDemandas(demandas, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength, input.getCores(), establishedRoutes);
                                             // reProcesarDemandasRSA(demandas, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength, input.getCores(), establishedRoutes);
+                                            Double bfRed = Utils.bfrRed(graph, input.getCapacity(),7);
+                                            System.out.println("Bfr red: " + bfRed);
                                         }
 
                                         desf = desf + 1;
@@ -348,37 +352,54 @@ public class SimulatorTest {
 
 
     public static void desfragmentacionPushPull(List<EstablishedRoute> rutas, Graph<Integer, Link> red, Integer capacidadEnlance, BigDecimal umbralRuidoMax, Double crosstalkPerUnitLength) {
+        Integer rutasDesplazada = -1;
+        Integer rutasNoDesplazadas = 0;
+        Double bfRedBefore = Utils.bfrRed(red, capacidadEnlance,7);
+        System.out.println("Bfr red inicial: " + bfRedBefore);
 
-        for (EstablishedRoute ruta : rutas) {
-            if (ruta.getFsIndexBegin() != 0) {
-                Integer FSindexBeginDF = verificarMovFsIzq(ruta, red);
-                if (FSindexBeginDF != ruta.getFsIndexBegin()) {
-                    ruta.setFsIndexBeginDf(FSindexBeginDF);
-                    ruta.setLifetimeDf(ruta.getLifetime());
-                    // Se desintala de red ya que hay lugar para mover mas hacia la izquierda
-                    Utils.deallocateFs(red, ruta, crosstalkPerUnitLength);
-                    // Antes de asignar a la red en los nuevos lugares se debe controlar el ruido antes de la insersion
-                    if (controlRuidoDF(red, ruta, umbralRuidoMax, crosstalkPerUnitLength)) {
-                        // se recuperar el tiempo de vida y se indica en indice nuevo del fs
-                        ruta.setFsIndexBegin(FSindexBeginDF);
+        while ( rutasDesplazada !=0 ){
+            rutasDesplazada = 0;
+            for (int i = 0; i < rutas.size(); i++) {
+                EstablishedRoute ruta = rutas.get(i);
+                if (ruta.getFsIndexBegin() != 0) {
+                    Integer FSindexBeginDF = verificarMovFsIzq(ruta, red);
+                    if (FSindexBeginDF != ruta.getFsIndexBegin()) {
+                        ruta.setFsIndexBeginDf(FSindexBeginDF);
+                        ruta.setLifetimeDf(ruta.getLifetime());
+                        // Se desintala de red ya que hay lugar para mover mas hacia la izquierda
+                        Utils.deallocateFs(red, ruta, crosstalkPerUnitLength);
+                        // Antes de asignar a la red en los nuevos lugares se debe controlar el ruido antes de la insersion
+                        if (controlRuidoDF(red, ruta, umbralRuidoMax, crosstalkPerUnitLength)) {
+                            // se recuperar el tiempo de vida y se indica en indice nuevo del fs
+                            ruta.setFsIndexBegin(FSindexBeginDF);
+                            rutasDesplazada++;
+                        }else{
+                            rutasNoDesplazadas++;
+                        }
+                        ruta.setLifetime(ruta.getLifetimeDf());
+                        Utils.assignFs(red, ruta, crosstalkPerUnitLength);
                     }
-                    ruta.setLifetime(ruta.getLifetimeDf());
-                    Utils.assignFs(red, ruta, crosstalkPerUnitLength);
                 }
             }
+            Double bfRed = Utils.bfrRed(red, capacidadEnlance,7);
+            System.out.println("Bfr red: " + bfRed);
+            System.out.println("Cantidad de rutas totales: " + rutas.size());
+            System.out.println("Cantidad de rutas desplazadas luego de desfragmentar es: " + rutasDesplazada);
+            System.out.println("Cantidad de rutas NO desplazadas luego de desfragmentar es: " + rutasNoDesplazadas);
         }
     }
 
     public static Integer verificarMovFsIzq(EstablishedRoute ruta, Graph<Integer, Link> red) {
 
         List<Link> enlacesRuta = ruta.getPath();
+        List<Integer> coresRuta = ruta.getPathCores();
         Integer FSindexBegin = ruta.getFsIndexBegin();
 
         List<Integer> ultimosLibres = new ArrayList<>();
 
         // Iterar sobre cada enlace de la ruta
         for (int i = 0; i < enlacesRuta.size(); i++) {
-            List<FrequencySlot> ranurasFS = enlacesRuta.get(i).getCores().get(i).getFrequencySlots();
+            List<FrequencySlot> ranurasFS = enlacesRuta.get(i).getCores().get(coresRuta.get(i)).getFrequencySlots();
             Integer ultimoFSLibreEnlacei = FSindexBegin;
             for (int fs = FSindexBegin - 1; fs >= 0; fs--) {
                 if (ranurasFS.get(fs).isFree()) {
@@ -401,6 +422,7 @@ public class SimulatorTest {
         Integer FSruta = ruta.getFsWidth();
         List<BigDecimal> crosstalkFSList = new ArrayList<>();
 
+        // Inicializar la lista de crosstalk
         for (int fsCrosstalkIndex = 0; fsCrosstalkIndex < FSruta; fsCrosstalkIndex++) {
             crosstalkFSList.add(BigDecimal.ZERO);
         }
@@ -408,9 +430,26 @@ public class SimulatorTest {
         // Iterar sobre cada enlace de la ruta
         for (int i = 0; i < enlacesRuta.size(); i++) {
 
-            List<FrequencySlot> bloqueFS = enlacesRuta.get(i).getCores().get(i).getFrequencySlots().subList(FSindexBeginDF,
-                    FSindexBeginDF + FSruta);
+            // Verificar los límites antes de acceder a los elementos
+            if (i >= coresRuta.size()) {
+                System.err.println("Error: Índice 'i' fuera de rango para coresRuta: " + i + " >= " + coresRuta.size());
+                return false;
+            }
 
+            // Verificar los límites para el subList de bloqueFS
+            int fsEndIndex = FSindexBeginDF + FSruta;
+            if (FSindexBeginDF < 0 || fsEndIndex > enlacesRuta.get(i).getCores().get(coresRuta.get(i)).getFrequencySlots().size()) {
+                System.err.println("Error: Índices de sublista fuera de rango. FSindexBeginDF: " + FSindexBeginDF +
+                        ", FSruta: " + FSruta + ", tamaño de frequencySlots: " +
+                        enlacesRuta.get(i).getCores().get(coresRuta.get(i)).getFrequencySlots().size());
+                return false;
+            }
+
+            // Obtener bloqueFS
+            List<FrequencySlot> bloqueFS = enlacesRuta.get(i).getCores().get(coresRuta.get(i)).getFrequencySlots()
+                    .subList(FSindexBeginDF, fsEndIndex);
+
+            // Lógica de control de ruido
             if (Algorithms.esBloqueFsMayorUmbralRuido(bloqueFS, umbralRuidoMax, crosstalkFSList)) {
                 // CONTROL DE RUIDO EN LOS NUCLEOS VECINOS
                 if (Algorithms.isNextToCrosstalkFreeCores(enlacesRuta.get(i), umbralRuidoMax, coresRuta.get(i), FSindexBeginDF, FSruta, crosstalkPerUnitLength)) {
@@ -429,4 +468,5 @@ public class SimulatorTest {
         }
         return puedeAsignar;
     }
+
 }
