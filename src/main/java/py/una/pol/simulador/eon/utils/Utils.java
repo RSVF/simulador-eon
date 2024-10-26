@@ -84,7 +84,7 @@ public class Utils {
                 destination = rand.nextInt(cantNodos);
             }
             Integer tLife = MathUtils.getLifetime(HT);
-            demands.add(new Demand(j, source, destination, fs, tLife, false, insertionTime, null));
+            demands.add(new Demand(j, source, destination, fs, tLife, false, insertionTime, null, null));
         }
         return demands;
     }
@@ -332,9 +332,10 @@ public class Utils {
             Boolean blocked = false;
             Integer insertionTime = null;
             List<Link> path = establishedRoute.getPath();
+            List<Integer> coresRoutes = establishedRoute.getPathCores();
 
             // Crear una nueva demanda con la información extraída
-            Demand demand = new Demand(id, source, destination, fs, lifetime, blocked, insertionTime, path);
+            Demand demand = new Demand(id, source, destination, fs, lifetime, blocked, insertionTime, path, coresRoutes);
             demands.add(demand);
         }
         return demands;

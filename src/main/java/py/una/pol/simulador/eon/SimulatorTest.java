@@ -61,7 +61,7 @@ public class SimulatorTest {
         input.setLambda(5);
 
         //Volumen de tráfico promedio en cada instante de tiempo
-        input.setErlang(2500);
+        input.setErlang(2000);
 
         //Algoritmos RSA
         input.setAlgorithms(new ArrayList<>());
@@ -95,8 +95,9 @@ public class SimulatorTest {
             String topologia = Constants.TOPOLOGIA_JPNNET;
             String tipoDesframentacion = Constants.DESFRAGMENTACION_EMPIRICA;
             Integer tiempoSimulacion = input.getSimulationTime();
-            Integer intervalo = 1000;
+            Integer intervalo = 2000;
             Integer desf = 0;
+            Double porcentajeRutas = 0.0;
 
             for (TopologiesEnum topology : input.getTopologies()) {
                 if (topology.toString().equals(topologia)) {
@@ -114,7 +115,7 @@ public class SimulatorTest {
 
                     for (Double crosstalkPerUnitLength : input.getCrosstalkPerUnitLenghtList()) {
                         for (RSAEnum algorithm : input.getAlgorithms()) {
-                            // Lista de rutas establecidas durante la simulación
+                            // Lista de rutas establecidas durante la simulacióndem
                             List<EstablishedRoute> establishedRoutes = new ArrayList<>();
                             System.out.println("Inicializando simulación del RSA " + algorithm.label() + " para erlang: "
                                     + (input.getErlang()) + " para la topología " + topology.label() + " y H = "
@@ -125,7 +126,7 @@ public class SimulatorTest {
                             establishedRoutes = new ArrayList<>();
 
 
-                            for (int k = 1; k <= 2; k++) {
+                            for (int k = 1; k <= 4; k++) {
                                 demandaNumero = 0;
                                 bloqueos = 0;
                                 rutasProcesadas = 0;
@@ -174,16 +175,26 @@ public class SimulatorTest {
                                         }
                                     }
 
-                                    if (k == 1 && (i != 0 && i % intervalo == 0)) {
+                                    if ((k == 2 || k == 3 || k == 4) && (i != 0 && i % intervalo == 0)) {
+
                                         if (Constants.DESFRAGMENTACION_PUSH_PULL == tipoDesframentacion) {
                                             desfragmentacionPushPull(establishedRoutes, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength);
 
                                         } else {
+                                            if ( k == 2 ){
+                                                porcentajeRutas = Constants.PORCENTAJE_30;
+                                            }
+                                            else if (k == 3 ){
+                                                porcentajeRutas = Constants.PORCENTAJE_50;
+                                            }else if(k == 4 ){
+                                                porcentajeRutas = Constants.PORCENTAJE_100;
+                                            }
+                                            Integer rutasNoDesplazadas = 0;
                                             Double bfRedBefore = Utils.bfrRed(graph, input.getCapacity(),7);
                                             System.out.println("Bfr red inicial: " + bfRedBefore);
                                             calcularBfrRutasActivas(establishedRoutes, graph, input.getCapacity());
                                             ordenarPorBfrRutaDesc(establishedRoutes); // se ordena de forma descendente, es decir de la ruta mas fragmentada a la menos fragmentada
-                                            List<EstablishedRoute> rutasSublist = Utils.obtenerPeoresRutas(establishedRoutes, Constants.PORCENTAJE_100);
+                                            List<EstablishedRoute> rutasSublist = Utils.obtenerPeoresRutas(establishedRoutes, porcentajeRutas);
                                             rutasSublist = Utils.ordenarRutasFsLt(rutasSublist, Constants.ORDER_ASC);
                                            // rutasSublist = Utils.ordenarRutasDistFs(rutasSublist, Constants.ORDER_ASC);
                                             int eliminado = 0;
@@ -194,15 +205,15 @@ public class SimulatorTest {
                                             }
                                             List<Demand> demandas = Utils.generarDemandas(rutasSublist);
                                             reProcesarDemandas(demandas, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength, input.getCores(), establishedRoutes);
-                                            // reProcesarDemandasRSA(demandas, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength, input.getCores(), establishedRoutes);
+                                            //reProcesarDemandasSameLinkAndCore(demandas, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength, input.getCores(), establishedRoutes);
+                                            //reProcesarDemandasRSA(demandas, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength, input.getCores(), establishedRoutes);
                                             Double bfRed = Utils.bfrRed(graph, input.getCapacity(),7);
                                             System.out.println("Bfr red: " + bfRed);
+
                                         }
 
                                         desf = desf + 1;
                                     }
-
-
                                 }
                                 System.out.println("Topología utilizada: " + topologia);
                                 System.out.println("Erlangs : " + input.getErlang());
@@ -212,6 +223,7 @@ public class SimulatorTest {
                                 System.out.println("--------------------------------------------------");
                                 System.out.println("Cantidad de desfragmentaciones: " + desf);
                                 System.out.println(System.lineSeparator());
+                                desf = 0;
                             }
 
 
@@ -287,7 +299,33 @@ public class SimulatorTest {
         for (Demand demanda : demandas) {
             EstablishedRoute rutasEstablecida;
             // Algoritmo RSA con conmutación de nucleos
-            rutasEstablecida = Algorithms.reRuteoCaminoOriginal(red, demanda, capacidadEnlance, cores, maxCrosstalk, crosstalkPerUnitLength);
+            rutasEstablecida = Algorithms.reRuteoCaminoOriginal(red, demanda, capacidadEnlance, cores, maxCrosstalk, crosstalkPerUnitLength );
+
+            if (rutasEstablecida == null || rutasEstablecida.getFsIndexBegin() == -1) {
+                bloqueos++;
+                System.out.println("Epaa. Se produjo bloqueos al reinsertar: " + bloqueos);
+            } else {
+                // Ruta establecida
+                AssignFsResponse response = Utils.assignFs(red, rutasEstablecida, crosstalkPerUnitLength);
+                rutasEstablecida = response.getRoute();
+                red = response.getGraph();
+                listasRutasActivas.add(rutasEstablecida);
+                asigancion++;
+            }
+        }
+        System.out.println("Cantidad de Bloqueos luego de reruteo es: " + bloqueos);
+    }
+
+
+    public static void reProcesarDemandasSameLinkAndCore(List<Demand> demandas, Graph<Integer, Link> red, Integer capacidadEnlance, BigDecimal maxCrosstalk,
+                                          Double crosstalkPerUnitLength, Integer cores, List<EstablishedRoute> listasRutasActivas) {
+        List<EstablishedRoute> listaRutasEstablecidas = new ArrayList<>();
+        int bloqueos = 0;
+        int asigancion = 0;
+        for (Demand demanda : demandas) {
+            EstablishedRoute rutasEstablecida;
+            // Algoritmo RSA con conmutación de nucleos
+            rutasEstablecida = Algorithms.reRuteoCaminoOriginalSameLinkAndCore(red, demanda, capacidadEnlance, cores, maxCrosstalk, crosstalkPerUnitLength);
 
             if (rutasEstablecida == null || rutasEstablecida.getFsIndexBegin() == -1) {
                 bloqueos++;

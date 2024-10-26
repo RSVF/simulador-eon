@@ -43,6 +43,8 @@ public class Demand {
 
     private List<Link> path;
 
+    private List<Integer> coresRoute;
+
     /**
      * Constructor con todos los parámetros
      *
@@ -55,7 +57,7 @@ public class Demand {
      * @param insertionTime Tiempo en el que se inserta la demanda
      */
     public Demand(Integer id, Integer source, Integer destination, Integer fs,
-            Integer lifetime, Boolean blocked, Integer insertionTime, List<Link> path) {
+            Integer lifetime, Boolean blocked, Integer insertionTime, List<Link> path, List<Integer> coresRoute) {
         this.id = id;
         this.source = source;
         this.destination = destination;
@@ -64,6 +66,7 @@ public class Demand {
         this.blocked = blocked;
         this.insertionTime = insertionTime;
         this.path = path;
+        this.coresRoute = coresRoute;
     }
 
     @Override
