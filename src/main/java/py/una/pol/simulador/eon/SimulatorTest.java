@@ -61,7 +61,7 @@ public class SimulatorTest {
         input.setLambda(5);
 
         //Volumen de tráfico promedio en cada instante de tiempo
-        input.setErlang(2000);
+        input.setErlang(1400);
 
         //Algoritmos RSA
         input.setAlgorithms(new ArrayList<>());
@@ -126,7 +126,7 @@ public class SimulatorTest {
                             establishedRoutes = new ArrayList<>();
 
 
-                            for (int k = 1; k <= 4; k++) {
+                            for (int k = 1; k <= 5; k++) {
                                 demandaNumero = 0;
                                 bloqueos = 0;
                                 rutasProcesadas = 0;
@@ -175,28 +175,31 @@ public class SimulatorTest {
                                         }
                                     }
 
-                                    if ((k == 2 || k == 3 || k == 4) && (i != 0 && i % intervalo == 0)) {
+                                    if ((k == 2 || k == 3 || k == 4 || k == 5) && (i != 0 && i % intervalo == 0)) {
 
                                         if (Constants.DESFRAGMENTACION_PUSH_PULL == tipoDesframentacion) {
                                             desfragmentacionPushPull(establishedRoutes, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength);
 
                                         } else {
+
+                                            List<EstablishedRoute> rutasSublist = Utils.obtenerPeoresRutas(establishedRoutes, Constants.PORCENTAJE_100);
+
                                             if ( k == 2 ){
-                                                porcentajeRutas = Constants.PORCENTAJE_30;
+                                                rutasSublist = Utils.ordenarRutasFsLt(rutasSublist, Constants.ORDER_ASC);
                                             }
                                             else if (k == 3 ){
-                                                porcentajeRutas = Constants.PORCENTAJE_50;
-                                            }else if(k == 4 ){
-                                                porcentajeRutas = Constants.PORCENTAJE_100;
+                                                rutasSublist = Utils.ordenarRutasFsLt(rutasSublist, Constants.ORDER_DESC);
                                             }
-                                            Integer rutasNoDesplazadas = 0;
+                                            else if(k == 4 ){
+                                                rutasSublist = Utils.ordenarRutasDistFs(rutasSublist, Constants.ORDER_ASC);
+                                            }
+                                            else if(k == 5 ){
+                                                rutasSublist = Utils.ordenarRutasDistFs(rutasSublist, Constants.ORDER_DESC);
+                                            }
+                                           /* Integer rutasNoDesplazadas = 0;
                                             Double bfRedBefore = Utils.bfrRed(graph, input.getCapacity(),7);
-                                            System.out.println("Bfr red inicial: " + bfRedBefore);
-                                            calcularBfrRutasActivas(establishedRoutes, graph, input.getCapacity());
-                                            ordenarPorBfrRutaDesc(establishedRoutes); // se ordena de forma descendente, es decir de la ruta mas fragmentada a la menos fragmentada
-                                            List<EstablishedRoute> rutasSublist = Utils.obtenerPeoresRutas(establishedRoutes, porcentajeRutas);
-                                            rutasSublist = Utils.ordenarRutasFsLt(rutasSublist, Constants.ORDER_ASC);
-                                           // rutasSublist = Utils.ordenarRutasDistFs(rutasSublist, Constants.ORDER_ASC);
+                                            System.out.println("Bfr red inicial: " + bfRedBefore);*/
+
                                             int eliminado = 0;
                                             while (eliminado < rutasSublist.size()) {
                                                 Utils.deallocateFs(graph, establishedRoutes.get(0), crosstalkPerUnitLength);
@@ -221,8 +224,7 @@ public class SimulatorTest {
                                 System.out.println("Cantidad de demandas asignadas: " + rutasProcesadas);
                                 System.out.println("Cantidad de demandas total: " + demandaNumero);
                                 System.out.println("--------------------------------------------------");
-                                System.out.println("Cantidad de desfragmentaciones: " + desf);
-                                System.out.println(System.lineSeparator());
+                                System.out.println("Cantidad de desfragmentaciones: " + desf);System.out.println(System.lineSeparator());
                                 desf = 0;
                             }
 
