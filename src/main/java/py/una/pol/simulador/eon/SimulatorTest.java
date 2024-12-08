@@ -95,7 +95,7 @@ public class SimulatorTest {
             String topologia = Constants.TOPOLOGIA_JPNNET;
             String tipoDesframentacion = Constants.DESFRAGMENTACION_EMPIRICA;
             Integer tiempoSimulacion = input.getSimulationTime();
-            Integer intervalo = 1000;
+            Integer intervalo = 2000;
             Integer desf = 0;
             Double porcentajeRutas = 0.0;
 
@@ -126,7 +126,7 @@ public class SimulatorTest {
                             establishedRoutes = new ArrayList<>();
 
 
-                            for (int k = 1; k <= 4; k++) {
+                            for (int k = 1; k <= 3; k++) {
                                 demandaNumero = 0;
                                 bloqueos = 0;
                                 rutasProcesadas = 0;
@@ -177,10 +177,10 @@ public class SimulatorTest {
 
                                     if ((k == 2 || k == 3 ) && (i != 0 && i % intervalo == 0)) {
 
-                                        if (k == 3) {
+                                        if (Constants.DESFRAGMENTACION_PUSH_PULL.equals(tipoDesframentacion)) {
                                             desfragmentacionPushPull(establishedRoutes, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength);
 
-                                        } else if (k == 2) {
+                                        } else {
                                             Integer rutasNoDesplazadas = 0;
                                             Double bfRedBefore = Utils.bfrRed(graph, input.getCapacity(),7);
                                             System.out.println("Bfr red inicial: " + bfRedBefore);
