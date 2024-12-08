@@ -61,7 +61,7 @@ public class SimulatorTest {
         input.setLambda(5);
 
         //Volumen de tráfico promedio en cada instante de tiempo
-        input.setErlang(1400);
+        input.setErlang(3000);
 
         //Algoritmos RSA
         input.setAlgorithms(new ArrayList<>());
@@ -92,7 +92,7 @@ public class SimulatorTest {
         try {
             createTableBloqueos();
             Input input = new SimulatorTest().getTestingInput();
-            String topologia = Constants.TOPOLOGIA_JPNNET;
+            String topologia = Constants.TOPOLOGIA_NSFNET;
             String tipoDesframentacion = Constants.DESFRAGMENTACION_EMPIRICA;
             Integer tiempoSimulacion = input.getSimulationTime();
             Integer intervalo = 2000;
