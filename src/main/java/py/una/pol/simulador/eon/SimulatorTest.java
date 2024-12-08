@@ -182,7 +182,7 @@ public class SimulatorTest {
                                         }
                                     }
 
-                                    if ((i != 0 && i % intervalo == 0) {
+                                    if (i != 0 && i % intervalo == 0) {
 
                                         if (Constants.DESFRAGMENTACION_PUSH_PULL == tipoDesframentacion) {
                                             desfragmentacionPushPull(establishedRoutes, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength);
