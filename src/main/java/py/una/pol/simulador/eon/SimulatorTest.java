@@ -181,19 +181,11 @@ public class SimulatorTest {
                                             desfragmentacionPushPull(establishedRoutes, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength);
 
                                         } else {
-                                            if ( k == 2 ){
-                                                porcentajeRutas = Constants.PORCENTAJE_30;
-                                            }
-                                            else if (k == 3 ){
-                                                porcentajeRutas = Constants.PORCENTAJE_50;
-                                            }else if(k == 4 ){
-                                                porcentajeRutas = Constants.PORCENTAJE_100;
-                                            }
                                             Integer rutasNoDesplazadas = 0;
                                             Double bfRedBefore = Utils.bfrRed(graph, input.getCapacity(),7);
                                             System.out.println("Bfr red inicial: " + bfRedBefore);
-                                            calcularBfrRutasActivas(establishedRoutes, graph, input.getCapacity());
-                                            ordenarPorBfrRutaDesc(establishedRoutes); // se ordena de forma descendente, es decir de la ruta mas fragmentada a la menos fragmentada
+                                            //calcularBfrRutasActivas(establishedRoutes, graph, input.getCapacity());
+                                            //ordenarPorBfrRutaDesc(establishedRoutes); // se ordena de forma descendente, es decir de la ruta mas fragmentada a la menos fragmentada
                                             List<EstablishedRoute> rutasSublist = Utils.obtenerPeoresRutas(establishedRoutes, porcentajeRutas);
                                             rutasSublist = Utils.ordenarRutasFsLt(rutasSublist, Constants.ORDER_ASC);
                                            // rutasSublist = Utils.ordenarRutasDistFs(rutasSublist, Constants.ORDER_ASC);
@@ -204,9 +196,13 @@ public class SimulatorTest {
                                                 eliminado++;
                                             }
                                             List<Demand> demandas = Utils.generarDemandas(rutasSublist);
-                                            reProcesarDemandas(demandas, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength, input.getCores(), establishedRoutes);
-                                            //reProcesarDemandasSameLinkAndCore(demandas, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength, input.getCores(), establishedRoutes);
-                                            //reProcesarDemandasRSA(demandas, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength, input.getCores(), establishedRoutes);
+                                            if ( k == 2 ){
+                                                reProcesarDemandas(demandas, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength, input.getCores(), establishedRoutes);
+                                            }
+                                            else if (k == 3 ){
+                                                reProcesarDemandasRSA(demandas, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength, input.getCores(), establishedRoutes);
+                                            }
+                                            //reProcesarDemandasSameLinkAndCore(demandas, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength, input.getCores(), establishedRoutes)
                                             Double bfRed = Utils.bfrRed(graph, input.getCapacity(),7);
                                             System.out.println("Bfr red: " + bfRed);
 
