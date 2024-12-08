@@ -175,7 +175,7 @@ public class SimulatorTest {
                                         }
                                     }
 
-                                    if ((k == 2 || k == 3 || k == 4) && (i != 0 && i % intervalo == 0)) {
+                                    if ((k == 2 || k == 3 ) && (i != 0 && i % intervalo == 0)) {
 
                                         if (Constants.DESFRAGMENTACION_PUSH_PULL == tipoDesframentacion) {
                                             desfragmentacionPushPull(establishedRoutes, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength);
