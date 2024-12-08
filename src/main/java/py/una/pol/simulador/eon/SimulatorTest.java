@@ -127,6 +127,13 @@ public class SimulatorTest {
 
 
                             for (int k = 1; k <= 4; k++) {
+                                if(k == 2){
+                                    intervalo = 5000;
+                                } else if(k == 3){
+                                    intervalo = 2000;
+                                }else if(k == 4){
+                                    intervalo = 1000;
+                                }
                                 demandaNumero = 0;
                                 bloqueos = 0;
                                 rutasProcesadas = 0;
@@ -175,7 +182,7 @@ public class SimulatorTest {
                                         }
                                     }
 
-                                    if ((k == 2 || k == 3 ) && (i != 0 && i % intervalo == 0)) {
+                                    if ((i != 0 && i % intervalo == 0) {
 
                                         if (Constants.DESFRAGMENTACION_PUSH_PULL == tipoDesframentacion) {
                                             desfragmentacionPushPull(establishedRoutes, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength);
@@ -196,12 +203,9 @@ public class SimulatorTest {
                                                 eliminado++;
                                             }
                                             List<Demand> demandas = Utils.generarDemandas(rutasSublist);
-                                            if ( k == 2 ){
                                                 reProcesarDemandas(demandas, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength, input.getCores(), establishedRoutes);
-                                            }
-                                            else if (k == 3 ){
-                                                reProcesarDemandasRSA(demandas, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength, input.getCores(), establishedRoutes);
-                                            }
+                                               // reProcesarDemandasRSA(demandas, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength, input.getCores(), establishedRoutes);
+
                                             //reProcesarDemandasSameLinkAndCore(demandas, graph, input.getCapacity(), input.getMaxCrosstalk(), crosstalkPerUnitLength, input.getCores(), establishedRoutes)
                                             Double bfRed = Utils.bfrRed(graph, input.getCapacity(),7);
                                             System.out.println("Bfr red: " + bfRed);
