@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package py.una.pol.simulador.eon;
 
 import java.io.IOException;
@@ -39,8 +35,8 @@ public class SimulatorTest {
         //Topologias de Red
         input.setTopologies(new ArrayList<>());
         input.getTopologies().add(TopologiesEnum.NSFNET);
-        input.getTopologies().add(TopologiesEnum.USNET);
-        input.getTopologies().add(TopologiesEnum.JPNNET);
+        //input.getTopologies().add(TopologiesEnum.USNET);
+        //input.getTopologies().add(TopologiesEnum.JPNNET);
 
         //Ancho de banda de cada FS
         input.setFsWidth(new BigDecimal("12.5"));
@@ -58,7 +54,7 @@ public class SimulatorTest {
         input.setCores(7);
 
         //Promedio de demandas en cada periodo o intervalo de tiempo
-        input.setLambda(5);
+        input.setLambda(1000);
 
         //Volumen de tráfico promedio en cada instante de tiempo
         input.setErlang(2000);
@@ -92,11 +88,11 @@ public class SimulatorTest {
         try {
             createTableBloqueos();
             Input input = new SimulatorTest().getTestingInput();
-            String topologia = Constants.TOPOLOGIA_JPNNET;
-            String tipoDesframentacion = Constants.DESFRAGMENTACION_EMPIRICA;
+            String topologia = Constants.TOPOLOGIA_NSFNET;
+            //String tipoDesframentacion = Constants.DESFRAGMENTACION_EMPIRICA;
             Integer tiempoSimulacion = input.getSimulationTime();
-            Integer intervalo = 1000;
-            Integer desf = 0;
+            int intervalo = 1000;
+            int desf = 0;
             Double porcentajeRutas = 0.0;
 
             for (TopologiesEnum topology : input.getTopologies()) {
@@ -124,15 +120,6 @@ public class SimulatorTest {
                             int bloqueos = 0;
                             int rutasProcesadas = 0;
                             establishedRoutes = new ArrayList<>();
-
-
-                            for (int k = 1; k <= 4; k++) {
-                                demandaNumero = 0;
-                                bloqueos = 0;
-                                rutasProcesadas = 0;
-                                establishedRoutes = new ArrayList<>();
-                                graph = Utils.createTopology(topology, input.getCores(), input.getFsWidth(), input.getCapacity());
-
 
                                 for (int i = 0; i < tiempoSimulacion; i++) {
 
@@ -175,6 +162,8 @@ public class SimulatorTest {
                                         }
                                     }
 
+                                    // Desfragmentacion
+                                    /*
                                     if ((k == 2 || k == 3 ) && (i != 0 && i % intervalo == 0)) {
 
                                         if (k == 3) {
@@ -206,6 +195,8 @@ public class SimulatorTest {
 
                                         desf = desf + 1;
                                     }
+
+                                     */
                                 }
                                 System.out.println("Topología utilizada: " + topologia);
                                 System.out.println("Erlangs : " + input.getErlang());
@@ -216,8 +207,10 @@ public class SimulatorTest {
                                 System.out.println("Cantidad de desfragmentaciones: " + desf);
                                 System.out.println(System.lineSeparator());
                                 desf = 0;
-                            }
 
+                                System.out.println("Input: " + input);
+                                System.out.println("Lista demandas " + listaDemandas);
+                                System.out.println("Rutas establecidas " + establishedRoutes);
 
                         }
                     }

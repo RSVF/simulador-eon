@@ -72,4 +72,22 @@ public class Input {
      */
     private List<Double> crosstalkPerUnitLenghtList;
 
+    @Override
+    public String toString() {
+        return "Input{\n" +
+                "simulationTime=" + simulationTime +
+                ",\n demands=" + demands +
+                ",\n topologies=" + topologies +
+                ",\n algorithms=" + algorithms +
+                ",\n fsWidth=" + fsWidth +
+                ",\n capacity=" + capacity +
+                ",\n erlang=" + erlang +
+                ",\n lambda=" + lambda +
+                ",\n fsRangeMin=" + fsRangeMin +
+                ",\n fsRangeMax=" + fsRangeMax +
+                ",\n cores=" + cores +
+                ",\n maxCrosstalk=" + maxCrosstalk +
+                ",\n crosstalkPerUnitLenghtList=" + crosstalkPerUnitLenghtList +
+                '}';
+    }
 }
