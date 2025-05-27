@@ -12,13 +12,6 @@ import py.una.pol.simulador.eon.utils.MetricsUtils;
  */
 public class MetricsCalculator {
 
-    /**
-     * Método principal que calcula todas las métricas solicitadas
-     *
-     * @param graph El grafo de la red
-     * @param capacidad La capacidad de los enlaces en frequency slots
-     * @param cores El número de cores por enlace
-     */
     public static void calcularMetricas(Graph<Integer, Link> graph, int capacidad, int cores) {
         System.out.println("------------------------------------------------------------");
         System.out.println("CÁLCULO DE MÉTRICAS DE FRAGMENTACIÓN");
@@ -101,14 +94,6 @@ public class MetricsCalculator {
         System.out.println("------------------------------------------------------------");
     }
 
-    /**
-     * Método para integrarse en la simulación después de procesar demandas
-     *
-     * @param graph El grafo de la red
-     * @param capacidad La capacidad de los enlaces
-     * @param cores El número de cores
-     * @param tiempoActual El tiempo actual en la simulación
-     */
     public static void reportarMetricasEnTiempo(Graph<Integer, Link> graph, int capacidad,
                                                 int cores, int tiempoActual) {
         System.out.println("MÉTRICAS EN TIEMPO t=" + tiempoActual);

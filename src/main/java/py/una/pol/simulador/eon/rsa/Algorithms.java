@@ -18,10 +18,6 @@ import py.una.pol.simulador.eon.models.FrequencySlot;
 import py.una.pol.simulador.eon.models.Link;
 import py.una.pol.simulador.eon.utils.Utils;
 
-/**
- *
- * @author Néstor E. Reinoso Wood
- */
 public class Algorithms {
 
     public static EstablishedRoute ruteoCoreMultiple(Graph<Integer, Link> graph, Demand demand, Integer capacity,

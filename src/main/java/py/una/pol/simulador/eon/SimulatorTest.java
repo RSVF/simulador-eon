@@ -16,15 +16,8 @@ import py.una.pol.simulador.eon.utils.MathUtils;
 import py.una.pol.simulador.eon.utils.Utils;
 import py.una.pol.simulador.eon.func.MainFunctions;
 
-/**
- * @author Néstor E. Reinoso Wood
- */
+
 public class SimulatorTest {
-    /**
-     * Simulador
-     *
-     * @param args Argumentos de entrada (Vacío)
-     */
 
     public static void main(String[] args) {
         try {
@@ -32,6 +25,11 @@ public class SimulatorTest {
             Input input = MainFunctions.getTestingInput();
             String topologia = Constants.TOPOLOGIA_NSFNET;
             Integer tiempoSimulacion = input.getSimulationTime();
+
+            System.out.println("Input: " + input);
+            System.out.println("Topologia: " + topologia);
+            System.out.println("Simulacion de Tiempo: " + tiempoSimulacion);
+
             int desf = 0;
 
             for (TopologiesEnum topology : input.getTopologies()) {
@@ -51,7 +49,7 @@ public class SimulatorTest {
                     for (Double crosstalkPerUnitLength : input.getCrosstalkPerUnitLenghtList()) {
                         for (RSAEnum algorithm : input.getAlgorithms()) {
                             // Lista de rutas establecidas durante la simulacióndem
-                            List<EstablishedRoute> establishedRoutes = new ArrayList<>();
+                            List<EstablishedRoute> establishedRoutes;
                             System.out.println("Inicializando simulación del RSA " + algorithm.label() + " para erlang: "
                                     + (input.getErlang()) + " para la topología " + topology.label() + " y H = "
                                     + crosstalkPerUnitLength.toString());
@@ -80,7 +78,7 @@ public class SimulatorTest {
                                             bloqueos++;
                                         } else {
                                             // RUTA ESTABLECIDA
-                                            System.out.println("Insertando demanda Nro : " + demandaNumero + " en el tiempo t= " + i + " ---->" + " Ejecutado");
+                                            //System.out.println("Insertando demanda Nro : " + demandaNumero + " en el tiempo t= " + i + " ---->" + " Ejecutado");
                                             AssignFsResponse response = Utils.assignFs(graph, establishedRoute,
                                                     crosstalkPerUnitLength);
                                             establishedRoute = response.getRoute();

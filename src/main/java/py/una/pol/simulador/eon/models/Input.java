@@ -74,20 +74,20 @@ public class Input {
 
     @Override
     public String toString() {
-        return "Input{\n" +
+        return "Input{" +
                 "simulationTime=" + simulationTime +
-                ",\n demands=" + demands +
-                ",\n topologies=" + topologies +
-                ",\n algorithms=" + algorithms +
-                ",\n fsWidth=" + fsWidth +
-                ",\n capacity=" + capacity +
-                ",\n erlang=" + erlang +
-                ",\n lambda=" + lambda +
-                ",\n fsRangeMin=" + fsRangeMin +
-                ",\n fsRangeMax=" + fsRangeMax +
-                ",\n cores=" + cores +
-                ",\n maxCrosstalk=" + maxCrosstalk +
-                ",\n crosstalkPerUnitLenghtList=" + crosstalkPerUnitLenghtList +
+                ", demands=" + demands +
+                ", topologies=" + topologies +
+                ", algorithms=" + algorithms +
+                ", fsWidth=" + fsWidth +
+                ", capacity=" + capacity +
+                ", erlang=" + erlang +
+                ", lambda=" + lambda +
+                ", fsRangeMin=" + fsRangeMin +
+                ", fsRangeMax=" + fsRangeMax +
+                ", cores=" + cores +
+                ", maxCrosstalk=" + maxCrosstalk +
+                ", crosstalkPerUnitLenghtList=" + crosstalkPerUnitLenghtList +
                 '}';
     }
 }
