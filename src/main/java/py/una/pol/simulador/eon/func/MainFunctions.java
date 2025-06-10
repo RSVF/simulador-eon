@@ -24,7 +24,7 @@ public class MainFunctions {
 
         Input input = new Input();
         //Cantidad de demandas
-        input.setDemands(10000);
+        input.setDemands(100000);
 
         //Topologias de Red
         input.setTopologies(new ArrayList<>());
@@ -48,10 +48,10 @@ public class MainFunctions {
         input.setCores(7);
 
         //Promedio de demandas en cada periodo o intervalo de tiempo
-        input.setLambda(100);
+        input.setLambda(1000);
 
         //Volumen de tráfico promedio en cada instante de tiempo
-        input.setErlang(2000);
+        input.setErlang(20000);
 
         //Algoritmos RSA
         input.setAlgorithms(new ArrayList<>());

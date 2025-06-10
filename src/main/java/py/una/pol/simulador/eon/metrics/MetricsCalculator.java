@@ -1,16 +1,37 @@
 package py.una.pol.simulador.eon.metrics;
 
-import java.util.ArrayList;
-import java.util.List;
 import org.jgrapht.Graph;
 import py.una.pol.simulador.eon.models.*;
 import py.una.pol.simulador.eon.utils.MetricsUtils;
+import java.util.List;
+import java.util.ArrayList;
 
-/**
- * Clase para calcular y mostrar las métricas de fragmentación
- * solicitadas para la simulación EON
- */
 public class MetricsCalculator {
+
+    private static List<MetricasInstantaneas> historialMetricas = new ArrayList<>();
+
+    public static class MetricasInstantaneas {
+        private int tiempo;
+        private int demandasProcesadas;
+        private int bloqueos;
+        private int demandasActivas;
+        private double tasaBloqueoInstantaneo;
+
+        public MetricasInstantaneas(int tiempo, int demandasProcesadas, int bloqueos, int demandasActivas) {
+            this.tiempo = tiempo;
+            this.demandasProcesadas = demandasProcesadas;
+            this.bloqueos = bloqueos;
+            this.demandasActivas = demandasActivas;
+            this.tasaBloqueoInstantaneo = demandasProcesadas > 0 ? (double) bloqueos / demandasProcesadas : 0.0;
+        }
+
+        // Getters
+        public int getTiempo() { return tiempo; }
+        public int getDemandasProcesadas() { return demandasProcesadas; }
+        public int getBloqueos() { return bloqueos; }
+        public int getDemandasActivas() { return demandasActivas; }
+        public double getTasaBloqueoInstantaneo() { return tasaBloqueoInstantaneo; }
+    }
 
     public static void calcularMetricas(Graph<Integer, Link> graph, int capacidad, int cores) {
         System.out.println("------------------------------------------------------------");
@@ -105,5 +126,155 @@ public class MetricsCalculator {
                 String.format("%.4f", MetricsUtils.getEntropiaPromedio(graph)));
         System.out.println("- BFR: " +
                 String.format("%.4f", MetricsUtils.getBFRMejorado(graph, capacidad, cores)));
+    }
+
+    /**
+     * Registra métricas instantáneas para un tiempo específico
+     * @param tiempo Tiempo actual de simulación
+     * @param demandasProcesadas Número de demandas procesadas en este tiempo
+     * @param bloqueos Número de bloqueos en este tiempo
+     * @param demandasActivas Número de demandas actualmente activas en la red
+     */
+    public static void registrarMetricasInstantaneas(int tiempo, int demandasProcesadas,
+                                                     int bloqueos, int demandasActivas) {
+        MetricasInstantaneas metricas = new MetricasInstantaneas(tiempo, demandasProcesadas,
+                bloqueos, demandasActivas);
+        historialMetricas.add(metricas);
+    }
+
+    /**
+     * Calcula la tasa de bloqueo instantáneo hacia atrás
+     * Utiliza los datos del tiempo x+1 para calcular la probabilidad de bloqueo en x
+     * @param tiempoActual Tiempo para el cual se quiere calcular la probabilidad
+     * @return Tasa de bloqueo instantáneo o -1 si no hay datos disponibles
+     */
+    public static double calcularTasaBloqueoInstantaneoHaciaAtras(int tiempoActual) {
+        // Buscar métricas del tiempo siguiente (x+1)
+        for (MetricasInstantaneas metricas : historialMetricas) {
+            if (metricas.getTiempo() == tiempoActual + 1) {
+                return metricas.getTasaBloqueoInstantaneo();
+            }
+        }
+        return -1.0; // No hay datos disponibles
+    }
+
+    /**
+     * Reporta métricas completas incluyendo estado de red y tasa de bloqueo
+     * @param graph Grafo de la red
+     * @param capacidad Capacidad de los enlaces
+     * @param cores Número de cores
+     * @param tiempoActual Tiempo actual
+     * @param demandasActivas Número de demandas activas
+     */
+    public static void reportarMetricasCompletas(Graph<Integer, Link> graph, int capacidad,
+                                                 int cores, int tiempoActual, int demandasActivas) {
+        System.out.println("============================================================");
+        System.out.println("MÉTRICAS COMPLETAS EN TIEMPO t=" + tiempoActual);
+        System.out.println("============================================================");
+
+        // Métricas de red tradicionales
+        System.out.println("MÉTRICAS DE FRAGMENTACIÓN:");
+        System.out.println("- Compactación promedio: " +
+                String.format("%.2f", MetricsUtils.getCompactacionPromedio(graph)));
+        System.out.println("- Fragmentación externa: " +
+                String.format("%.2f", MetricsUtils.getFragmentacionExternaPromedio(graph)) + "%");
+        System.out.println("- Entropía: " +
+                String.format("%.4f", MetricsUtils.getEntropiaPromedio(graph)));
+        System.out.println("- BFR: " +
+                String.format("%.4f", MetricsUtils.getBFRMejorado(graph, capacidad, cores)));
+
+        // Estado de la red
+        System.out.println("\nESTADO DE LA RED:");
+        System.out.println("- Demandas activas: " + demandasActivas);
+
+        // Tasa de bloqueo instantáneo hacia atrás
+        double tasaBloqueoHaciaAtras = calcularTasaBloqueoInstantaneoHaciaAtras(tiempoActual);
+        System.out.println("\nTASA DE BLOQUEO:");
+        if (tasaBloqueoHaciaAtras >= 0) {
+            System.out.println("- Tasa de bloqueo instantáneo hacia atrás: " +
+                    String.format("%.4f", tasaBloqueoHaciaAtras) + " (" +
+                    String.format("%.2f", tasaBloqueoHaciaAtras * 100) + "%)");
+        } else {
+            System.out.println("- Tasa de bloqueo instantáneo hacia atrás: No disponible (falta t+1)");
+        }
+
+        // Métricas del tiempo actual si están disponibles
+        for (MetricasInstantaneas metricas : historialMetricas) {
+            if (metricas.getTiempo() == tiempoActual) {
+                System.out.println("- Tasa de bloqueo instantáneo actual: " +
+                        String.format("%.4f", metricas.getTasaBloqueoInstantaneo()) + " (" +
+                        String.format("%.2f", metricas.getTasaBloqueoInstantaneo() * 100) + "%)");
+                break;
+            }
+        }
+
+        System.out.println("============================================================");
+    }
+
+    /**
+     * Genera un resumen estadístico de todas las métricas recolectadas
+     */
+    public static void generarResumenEstadistico() {
+        if (historialMetricas.isEmpty()) {
+            System.out.println("No hay métricas históricas disponibles.");
+            return;
+        }
+
+        System.out.println("============================================================");
+        System.out.println("RESUMEN ESTADÍSTICO DE LA SIMULACIÓN");
+        System.out.println("============================================================");
+
+        double sumaTasaBloqueo = 0.0;
+        double maxTasaBloqueo = 0.0;
+        double minTasaBloqueo = Double.MAX_VALUE;
+        int totalDemandas = 0;
+        int totalBloqueos = 0;
+        int maxDemandasActivas = 0;
+
+        for (MetricasInstantaneas metricas : historialMetricas) {
+            sumaTasaBloqueo += metricas.getTasaBloqueoInstantaneo();
+            maxTasaBloqueo = Math.max(maxTasaBloqueo, metricas.getTasaBloqueoInstantaneo());
+            minTasaBloqueo = Math.min(minTasaBloqueo, metricas.getTasaBloqueoInstantaneo());
+            totalDemandas += metricas.getDemandasProcesadas();
+            totalBloqueos += metricas.getBloqueos();
+            maxDemandasActivas = Math.max(maxDemandasActivas, metricas.getDemandasActivas());
+        }
+
+        double promedioTasaBloqueo = sumaTasaBloqueo / historialMetricas.size();
+        double tasaBloqueoGlobal = totalDemandas > 0 ? (double) totalBloqueos / totalDemandas : 0.0;
+
+        System.out.println("ESTADÍSTICAS DE BLOQUEO:");
+        System.out.println("- Tasa de bloqueo global: " + String.format("%.4f", tasaBloqueoGlobal) +
+                " (" + String.format("%.2f", tasaBloqueoGlobal * 100) + "%)");
+        System.out.println("- Tasa de bloqueo promedio por tiempo: " +
+                String.format("%.4f", promedioTasaBloqueo) +
+                " (" + String.format("%.2f", promedioTasaBloqueo * 100) + "%)");
+        System.out.println("- Tasa de bloqueo máxima: " + String.format("%.4f", maxTasaBloqueo) +
+                " (" + String.format("%.2f", maxTasaBloqueo * 100) + "%)");
+        System.out.println("- Tasa de bloqueo mínima: " + String.format("%.4f", minTasaBloqueo) +
+                " (" + String.format("%.2f", minTasaBloqueo * 100) + "%)");
+
+        System.out.println("\nESTADÍSTICAS GENERALES:");
+        System.out.println("- Total de demandas procesadas: " + totalDemandas);
+        System.out.println("- Total de bloqueos: " + totalBloqueos);
+        System.out.println("- Máximo de demandas activas simultáneas: " + maxDemandasActivas);
+        System.out.println("- Tiempos de simulación: " + historialMetricas.size());
+
+        System.out.println("============================================================");
+    }
+
+    /**
+     * Limpia el historial de métricas (útil para nuevas simulaciones)
+     */
+    public static void limpiarHistorial() {
+        historialMetricas.clear();
+    }
+
+    /**
+     * Obtiene el historial completo de métricas
+     * @return Lista de métricas instantáneas
+     */
+    public static List<MetricasInstantaneas> getHistorialMetricas() {
+        return new ArrayList<>(historialMetricas);
     }
 }

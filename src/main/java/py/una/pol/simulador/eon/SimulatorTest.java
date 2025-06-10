@@ -7,6 +7,7 @@ import java.util.List;
 
 import com.sun.tools.javac.Main;
 import org.jgrapht.Graph;
+import py.una.pol.simulador.eon.metrics.MetricsCalculator;
 import py.una.pol.simulador.eon.models.*;
 import py.una.pol.simulador.eon.models.enums.RSAEnum;
 import py.una.pol.simulador.eon.models.enums.TopologiesEnum;
@@ -58,48 +59,87 @@ public class SimulatorTest {
                             int rutasProcesadas = 0;
                             establishedRoutes = new ArrayList<>();
 
-                                for (int i = 0; i < tiempoSimulacion; i++) {
+                            MetricsCalculator.limpiarHistorial();
 
-                                    //  Demandas a ser transmitidas en el intervalo de tiempo i
-                                    List<Demand> demands = listaDemandas.get(i);
-                                    for (Demand demand : demands) {
-                                        demandaNumero++;
-                                        EstablishedRoute establishedRoute;
-                                        // ALGORITMO RSA CON CONMUTACION DE NUCLEOS
-                                        establishedRoute = Algorithms.ruteoCoreMultiple(graph, demand, input.getCapacity(),
-                                                input.getCores(), input.getMaxCrosstalk(), crosstalkPerUnitLength);
+                            for (int i = 0; i < tiempoSimulacion; i++) {
 
-                                        if (establishedRoute == null || establishedRoute.getFsIndexBegin() == -1) {
-                                            // BLOQUEO
-                                            System.out.println("Insertando demanda Nro : " + demandaNumero + " en el tiempo t= " + i + " ---------------------->" + " Bloqueado");
-                                            demand.setBlocked(true);
-                                            MainFunctions.insertDataBloqueo(algorithm.label(), topology.label(), "" + i, "" + demand.getId(),
-                                                    "" + input.getErlang(), crosstalkPerUnitLength.toString());
-                                            bloqueos++;
-                                        } else {
-                                            // RUTA ESTABLECIDA
-                                            //System.out.println("Insertando demanda Nro : " + demandaNumero + " en el tiempo t= " + i + " ---->" + " Ejecutado");
-                                            AssignFsResponse response = Utils.assignFs(graph, establishedRoute,
-                                                    crosstalkPerUnitLength);
-                                            establishedRoute = response.getRoute();
-                                            graph = response.getGraph();
-                                            establishedRoutes.add(establishedRoute);
-                                            rutasProcesadas++;
-                                        }
-                                    }
-                                    for (EstablishedRoute route : establishedRoutes) {
-                                        route.subLifeTime();
-                                    }
-                                    for (int ri = 0; ri < establishedRoutes.size(); ri++) {
-                                        EstablishedRoute route = establishedRoutes.get(ri);
-                                        if (route.getLifetime().equals(0)) {
-                                            Utils.deallocateFs(graph, route, crosstalkPerUnitLength);
-                                            establishedRoutes.remove(ri);
-                                            ri--;
-                                        }
-                                    }
+                                // Contadores para este tiempo específico
+                                int demandasProcesadasEnTiempo = 0;
+                                int bloqueosEnTiempo = 0;
 
+                                // Demandas a ser transmitidas en el intervalo de tiempo i
+                                List<Demand> demands = listaDemandas.get(i);
+
+                                for (Demand demand : demands) {
+                                    demandaNumero++;
+                                    demandasProcesadasEnTiempo++;
+                                    EstablishedRoute establishedRoute;
+
+                                    // ALGORITMO RSA CON CONMUTACION DE NUCLEOS
+                                    establishedRoute = Algorithms.ruteoCoreMultiple(graph, demand, input.getCapacity(),
+                                            input.getCores(), input.getMaxCrosstalk(), crosstalkPerUnitLength);
+
+                                    if (establishedRoute == null || establishedRoute.getFsIndexBegin() == -1) {
+                                        // BLOQUEO
+                                        System.out.println("Insertando demanda Nro : " + demandaNumero + " en el tiempo t= " + i +
+                                                " ---------------------->" + " Bloqueado");
+                                        demand.setBlocked(true);
+                                        MainFunctions.insertDataBloqueo(algorithm.label(), topology.label(), "" + i, "" + demand.getId(),
+                                                "" + input.getErlang(), crosstalkPerUnitLength.toString());
+                                        bloqueos++;
+                                        bloqueosEnTiempo++;
+                                    } else {
+                                        // RUTA ESTABLECIDA
+                                        //System.out.println("Insertando demanda Nro : " + demandaNumero + " en el tiempo t= " + i +
+                                        //                 " ---->" + " Ejecutado");
+                                        AssignFsResponse response = Utils.assignFs(graph, establishedRoute,
+                                                crosstalkPerUnitLength);
+                                        establishedRoute = response.getRoute();
+                                        graph = response.getGraph();
+                                        establishedRoutes.add(establishedRoute);
+                                        rutasProcesadas++;
+                                    }
                                 }
+
+                                // Decrementar tiempo de vida de las rutas establecidas
+                                for (EstablishedRoute route : establishedRoutes) {
+                                    route.subLifeTime();
+                                }
+
+                                // Remover rutas que han expirado
+                                for (int ri = 0; ri < establishedRoutes.size(); ri++) {
+                                    EstablishedRoute route = establishedRoutes.get(ri);
+                                    if (route.getLifetime().equals(0)) {
+                                        Utils.deallocateFs(graph, route, crosstalkPerUnitLength);
+                                        establishedRoutes.remove(ri);
+                                        ri--;
+                                    }
+                                }
+
+                                // Registrar métricas instantáneas para este tiempo
+                                int demandasActivas = establishedRoutes.size();
+                                MetricsCalculator.registrarMetricasInstantaneas(i, demandasProcesadasEnTiempo,
+                                        bloqueosEnTiempo, demandasActivas);
+
+                                // Reportar métricas cada cierto intervalo (opcional)
+                                if (i % 10 == 0 || i == tiempoSimulacion - 1) {
+                                    MetricsCalculator.reportarMetricasCompletas(graph, input.getCapacity(),
+                                            input.getCores(), i, demandasActivas);
+                                }
+
+                                // Si es el último tiempo, mostrar métricas finales detalladas
+                                if (i == tiempoSimulacion - 1) {
+                                    System.out.println("\n" + "=".repeat(60));
+                                    System.out.println("MÉTRICAS FINALES DE LA SIMULACIÓN");
+                                    System.out.println("=".repeat(60));
+
+                                    // Métricas tradicionales detalladas
+                                    MetricsCalculator.calcularMetricas(graph, input.getCapacity(), input.getCores());
+
+                                    // Resumen estadístico completo
+                                    MetricsCalculator.generarResumenEstadistico();
+                                }
+                            }
                                 System.out.println("Topología utilizada: " + topologia);
                                 System.out.println("Erlangs : " + input.getErlang());
                                 System.out.println("TOTAL DE BLOQUEOS: " + bloqueos);
