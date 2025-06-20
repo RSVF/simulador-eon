@@ -21,54 +21,33 @@ import java.util.List;
 public class MainFunctions {
 
     public static Input getTestingInput() {
-
         Input input = new Input();
-        //Cantidad de demandas
-        input.setDemands(100000);
 
-        //Topologias de Red
+        // Aumentar demandas para extender simulación
+        input.setDemands(300000);  // Cambio principal
+
         input.setTopologies(new ArrayList<>());
         input.getTopologies().add(TopologiesEnum.NSFNET);
-        //input.getTopologies().add(TopologiesEnum.USNET);
-        //input.getTopologies().add(TopologiesEnum.JPNNET);
 
-        //Ancho de banda de cada FS
         input.setFsWidth(new BigDecimal("12.5"));
 
-        //Cantidad máxima de FS a ocupar por una demanda
-        input.setFsRangeMax(8);
+        // Parámetros para generar bloqueos
+        input.setFsRangeMax(12);
+        input.setFsRangeMin(6);
+        input.setCapacity(50);
+        input.setCores(7);              // MANTENIDO
+        input.setLambda(2500);          // Ajustado para 120 tiempos
+        input.setErlang(50000);
 
-        //Cantidad mínima de FS a ocupar por una demanda
-        input.setFsRangeMin(2);
-
-        //Cantidad de FS del enlace
-        input.setCapacity(320);
-
-        //Cantidad de nucleos de la fibra
-        input.setCores(7);
-
-        //Promedio de demandas en cada periodo o intervalo de tiempo
-        input.setLambda(1000);
-
-        //Volumen de tráfico promedio en cada instante de tiempo
-        input.setErlang(20000);
-
-        //Algoritmos RSA
         input.setAlgorithms(new ArrayList<>());
         input.getAlgorithms().add(RSAEnum.MULTIPLES_CORES);
 
-        //Cantidad de intervalos de tiempo de la simulación
         input.setSimulationTime(MathUtils.getSimulationTime(input.getDemands(), input.getLambda()));
 
-        //Umbral del ruido, Máxima atenuación tolerable de la red
-        //input.setMaxCrosstalk(new BigDecimal("0.031622776601683793319988935444")); // XT = -15 dB
-        input.setMaxCrosstalk(new BigDecimal("0.003162277660168379331998893544")); // XT = -25 dB
-
-        //Características de la fibra utilizada. h = incremento del ruido por unidad de tiempo
+        // Parámetros físicos mantenidos
+        input.setMaxCrosstalk(new BigDecimal("0.003162277660168379331998893544"));
         input.setCrosstalkPerUnitLenghtList(new ArrayList<>());
-        //input.getCrosstalkPerUnitLenghtList().add((2 * Math.pow(0.0035, 2) * 0.080) / (4000000 * 0.000045)); //F1
-        //input.getCrosstalkPerUnitLenghtList().add((2 * Math.pow(0.00040, 2) * 0.050) / (4000000 * 0.000040)); //F2
-        input.getCrosstalkPerUnitLenghtList().add((2 * Math.pow(0.0000316, 2) * 0.055) / (4000000 * 0.000045)); //F3
+        input.getCrosstalkPerUnitLenghtList().add((2 * Math.pow(0.0000316, 2) * 0.055) / (4000000 * 0.000045));
 
         return input;
     }

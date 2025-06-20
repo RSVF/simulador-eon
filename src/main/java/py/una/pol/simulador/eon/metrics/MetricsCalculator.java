@@ -128,13 +128,6 @@ public class MetricsCalculator {
                 String.format("%.4f", MetricsUtils.getBFRMejorado(graph, capacidad, cores)));
     }
 
-    /**
-     * Registra métricas instantáneas para un tiempo específico
-     * @param tiempo Tiempo actual de simulación
-     * @param demandasProcesadas Número de demandas procesadas en este tiempo
-     * @param bloqueos Número de bloqueos en este tiempo
-     * @param demandasActivas Número de demandas actualmente activas en la red
-     */
     public static void registrarMetricasInstantaneas(int tiempo, int demandasProcesadas,
                                                      int bloqueos, int demandasActivas) {
         MetricasInstantaneas metricas = new MetricasInstantaneas(tiempo, demandasProcesadas,
@@ -142,12 +135,6 @@ public class MetricsCalculator {
         historialMetricas.add(metricas);
     }
 
-    /**
-     * Calcula la tasa de bloqueo instantáneo hacia atrás
-     * Utiliza los datos del tiempo x+1 para calcular la probabilidad de bloqueo en x
-     * @param tiempoActual Tiempo para el cual se quiere calcular la probabilidad
-     * @return Tasa de bloqueo instantáneo o -1 si no hay datos disponibles
-     */
     public static double calcularTasaBloqueoInstantaneoHaciaAtras(int tiempoActual) {
         // Buscar métricas del tiempo siguiente (x+1)
         for (MetricasInstantaneas metricas : historialMetricas) {
@@ -158,14 +145,6 @@ public class MetricsCalculator {
         return -1.0; // No hay datos disponibles
     }
 
-    /**
-     * Reporta métricas completas incluyendo estado de red y tasa de bloqueo
-     * @param graph Grafo de la red
-     * @param capacidad Capacidad de los enlaces
-     * @param cores Número de cores
-     * @param tiempoActual Tiempo actual
-     * @param demandasActivas Número de demandas activas
-     */
     public static void reportarMetricasCompletas(Graph<Integer, Link> graph, int capacidad,
                                                  int cores, int tiempoActual, int demandasActivas) {
         System.out.println("============================================================");
@@ -263,17 +242,10 @@ public class MetricsCalculator {
         System.out.println("============================================================");
     }
 
-    /**
-     * Limpia el historial de métricas (útil para nuevas simulaciones)
-     */
     public static void limpiarHistorial() {
         historialMetricas.clear();
     }
 
-    /**
-     * Obtiene el historial completo de métricas
-     * @return Lista de métricas instantáneas
-     */
     public static List<MetricasInstantaneas> getHistorialMetricas() {
         return new ArrayList<>(historialMetricas);
     }

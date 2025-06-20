@@ -102,12 +102,6 @@ public class MetricsUtils {
         return (1 - ((double) bloqueLibreMasGrande / totalLibre)) * 100;
     }
 
-    /**
-     * Calcula la fragmentación externa promedio para toda la red
-     *
-     * @param graph Grafo de la red
-     * @return Promedio de fragmentación externa en la red
-     */
     public static double getFragmentacionExternaPromedio(Graph<Integer, Link> graph) {
         double sumFragmentacion = 0;
         int totalEvaluaciones = 0;
@@ -122,16 +116,6 @@ public class MetricsUtils {
         return totalEvaluaciones > 0 ? sumFragmentacion / totalEvaluaciones : 0;
     }
 
-    /**
-     * 3. ENTROPÍA
-     *
-     * Calcula la entropía de Shannon para la distribución de espacios
-     * libres/ocupados en un núcleo específico
-     *
-     * @param link Enlace a evaluar
-     * @param coreIndex Índice del núcleo a evaluar
-     * @return Valor de entropía
-     */
     public static double getEntropia(Link link, int coreIndex) {
         Core core = link.getCores().get(coreIndex);
         List<FrequencySlot> slots = core.getFrequencySlots();
@@ -164,12 +148,7 @@ public class MetricsUtils {
         return entropia;
     }
 
-    /**
-     * Calcula la entropía promedio para toda la red
-     *
-     * @param graph Grafo de la red
-     * @return Promedio de entropía en la red
-     */
+
     public static double getEntropiaPromedio(Graph<Integer, Link> graph) {
         double sumEntropia = 0;
         int totalEvaluaciones = 0;
@@ -184,17 +163,6 @@ public class MetricsUtils {
         return totalEvaluaciones > 0 ? sumEntropia / totalEvaluaciones : 0;
     }
 
-    /**
-     * 4. BFR (Blocking Factor Ratio)
-     *
-     * Basado en las funciones existentes en Utils.bfrRuta y Utils.bfrRed,
-     * pero adaptado para calcular el BFR específico para un enlace y núcleo.
-     *
-     * @param link Enlace a evaluar
-     * @param coreIndex Índice del núcleo
-     * @param capacidad Capacidad total de slots
-     * @return Valor de BFR para el núcleo específico
-     */
     public static double getBFR(Link link, int coreIndex, int capacidad) {
         Core core = link.getCores().get(coreIndex);
         List<FrequencySlot> slots = core.getFrequencySlots();
@@ -233,13 +201,7 @@ public class MetricsUtils {
         return totalLibres > 0 ? sumaCuadrados / (capacidad * totalLibres) : 0;
     }
 
-    /**
-     * Calcula el BFR promedio para toda la red
-     *
-     * @param graph Grafo de la red
-     * @param capacidad Capacidad total de slots
-     * @return Promedio de BFR en la red
-     */
+
     public static double getBFRPromedio(Graph<Integer, Link> graph, int capacidad) {
         double sumBFR = 0;
         int totalEvaluaciones = 0;
@@ -254,15 +216,6 @@ public class MetricsUtils {
         return totalEvaluaciones > 0 ? sumBFR / totalEvaluaciones : 0;
     }
 
-    /**
-     * Versión mejorada del BFR específicamente para redes EON
-     * que considera la relación entre slots libres y totales
-     *
-     * @param graph Grafo de la red
-     * @param capacidad Capacidad total del enlace en slots
-     * @param cores Número total de núcleos
-     * @return Valor de BFR para la red
-     */
     public static double getBFRMejorado(Graph<Integer, Link> graph, int capacidad, int cores) {
         double totalFS = 0;
         double totalFSLibres = 0;
