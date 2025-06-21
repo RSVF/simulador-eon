@@ -118,13 +118,19 @@ public class SimulatorTest {
 
                                 // Registrar métricas instantáneas para este tiempo
                                 int demandasActivas = establishedRoutes.size();
-                                MetricsCalculator.registrarMetricasInstantaneas(i, demandasProcesadasEnTiempo,
-                                        bloqueosEnTiempo, demandasActivas);
+                                MetricsCalculator.registrarMetricasInstantaneas(
+                                        i,
+                                        demandasProcesadasEnTiempo,
+                                        bloqueosEnTiempo,
+                                        demandasActivas,
+                                        graph,
+                                        input.getCapacity(),
+                                        input.getCores()
+                                );
 
                                 // Reportar métricas cada cierto intervalo (opcional)
                                 if (i % 10 == 0 || i == tiempoSimulacion - 1) {
-                                    MetricsCalculator.reportarMetricasCompletas(graph, input.getCapacity(),
-                                            input.getCores(), i, demandasActivas);
+                                    MetricsCalculator.reportarMetricasCompletas(i, demandasActivas);
                                 }
 
                                 // Si es el último tiempo, mostrar métricas finales detalladas
@@ -140,6 +146,11 @@ public class SimulatorTest {
                                     MetricsCalculator.generarResumenEstadistico();
                                 }
                             }
+                                String nombreCSV = String.format("metricas_%s_%s_H%.2f.csv",
+                                        algorithm.label(),
+                                        topology.label(),
+                                        crosstalkPerUnitLength);
+                                MetricsCalculator.generarCSVMetricas(nombreCSV);
                                 System.out.println("Topología utilizada: " + topologia);
                                 System.out.println("Erlangs : " + input.getErlang());
                                 System.out.println("TOTAL DE BLOQUEOS: " + bloqueos);

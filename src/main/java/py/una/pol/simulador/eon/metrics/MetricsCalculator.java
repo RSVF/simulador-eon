@@ -3,6 +3,10 @@ package py.una.pol.simulador.eon.metrics;
 import org.jgrapht.Graph;
 import py.una.pol.simulador.eon.models.*;
 import py.una.pol.simulador.eon.utils.MetricsUtils;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -16,13 +20,24 @@ public class MetricsCalculator {
         private int bloqueos;
         private int demandasActivas;
         private double tasaBloqueoInstantaneo;
+        private double compactacionPromedio;
+        private double fragmentacionExternaPromedio;
+        private double entropiaPromedio;
+        private double bfrMejorado;
 
-        public MetricasInstantaneas(int tiempo, int demandasProcesadas, int bloqueos, int demandasActivas) {
+        public MetricasInstantaneas(int tiempo, int demandasProcesadas, int bloqueos,
+                                    int demandasActivas, double compactacionPromedio,
+                                    double fragmentacionExternaPromedio,
+                                    double entropiaPromedio, double bfrMejorado) {
             this.tiempo = tiempo;
             this.demandasProcesadas = demandasProcesadas;
             this.bloqueos = bloqueos;
             this.demandasActivas = demandasActivas;
             this.tasaBloqueoInstantaneo = demandasProcesadas > 0 ? (double) bloqueos / demandasProcesadas : 0.0;
+            this.compactacionPromedio = compactacionPromedio;
+            this.fragmentacionExternaPromedio = fragmentacionExternaPromedio;
+            this.entropiaPromedio = entropiaPromedio;
+            this.bfrMejorado = bfrMejorado;
         }
 
         // Getters
@@ -31,6 +46,10 @@ public class MetricsCalculator {
         public int getBloqueos() { return bloqueos; }
         public int getDemandasActivas() { return demandasActivas; }
         public double getTasaBloqueoInstantaneo() { return tasaBloqueoInstantaneo; }
+        public double getCompactacionPromedio() { return compactacionPromedio; }
+        public double getFragmentacionExternaPromedio() { return fragmentacionExternaPromedio; }
+        public double getEntropiaPromedio() { return entropiaPromedio; }
+        public double getBfrMejorado() { return bfrMejorado; }
     }
 
     public static void calcularMetricas(Graph<Integer, Link> graph, int capacidad, int cores) {
@@ -129,10 +148,43 @@ public class MetricsCalculator {
     }
 
     public static void registrarMetricasInstantaneas(int tiempo, int demandasProcesadas,
-                                                     int bloqueos, int demandasActivas) {
+                                                     int bloqueos, int demandasActivas,
+                                                     Graph<Integer, Link> graph, int capacidad, int cores) {
+        double compactacion = MetricsUtils.getCompactacionPromedio(graph);
+        double fragmentacion = MetricsUtils.getFragmentacionExternaPromedio(graph);
+        double entropia = MetricsUtils.getEntropiaPromedio(graph);
+        double bfr = MetricsUtils.getBFRMejorado(graph, capacidad, cores);
+
         MetricasInstantaneas metricas = new MetricasInstantaneas(tiempo, demandasProcesadas,
-                bloqueos, demandasActivas);
+                bloqueos, demandasActivas, compactacion, fragmentacion, entropia, bfr);
+
         historialMetricas.add(metricas);
+    }
+
+    public static void reportarMetricasCompletas(
+            int tiempoActual, int demandasActivas) {
+
+        // Obtener métricas del tiempo actual desde el historial
+        MetricasInstantaneas metricas = null;
+        for (MetricasInstantaneas m : historialMetricas) {
+            if (m.getTiempo() == tiempoActual) {
+                metricas = m;
+                break;
+            }
+        }
+
+        if (metricas == null) return;
+
+        System.out.println("MÉTRICAS COMPLETAS EN TIEMPO t=" + tiempoActual);
+        System.out.println("- Compactación promedio: " +
+                String.format("%.2f", metricas.getCompactacionPromedio()));
+        System.out.println("- Fragmentación externa: " +
+                String.format("%.2f", metricas.getFragmentacionExternaPromedio()) + "%");
+        System.out.println("- Entropía: " +
+                String.format("%.4f", metricas.getEntropiaPromedio()));
+        System.out.println("- BFR: " +
+                String.format("%.4f", metricas.getBfrMejorado()));
+        // ... resto de métricas ...
     }
 
     public static double calcularTasaBloqueoInstantaneoHaciaAtras(int tiempoActual) {
@@ -248,5 +300,29 @@ public class MetricsCalculator {
 
     public static List<MetricasInstantaneas> getHistorialMetricas() {
         return new ArrayList<>(historialMetricas);
+    }
+
+    public static void generarCSVMetricas(String nombreArchivo) {
+        try (PrintWriter writer = new PrintWriter(new File(nombreArchivo))) {
+            // Encabezado del CSV
+            writer.println("Tiempo,Demandas Procesadas,Bloqueos,Demandas Activas,"
+                    + "Compactacion,Fragmentacion,Entropia,BFR");
+
+            // Datos
+            for (MetricasInstantaneas metrica : historialMetricas) {
+                writer.println(String.format("%d,%d,%d,%d,%.2f,%.2f,%.4f,%.4f",
+                        metrica.getTiempo(),
+                        metrica.getDemandasProcesadas(),
+                        metrica.getBloqueos(),
+                        metrica.getDemandasActivas(),
+                        metrica.getCompactacionPromedio(),
+                        metrica.getFragmentacionExternaPromedio(),
+                        metrica.getEntropiaPromedio(),
+                        metrica.getBfrMejorado()));
+            }
+            System.out.println("Archivo CSV generado: " + nombreArchivo);
+        } catch (FileNotFoundException e) {
+            System.err.println("Error al generar CSV: " + e.getMessage());
+        }
     }
 }
